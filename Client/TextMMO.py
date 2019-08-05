@@ -31,7 +31,7 @@ def startGame():
     sleep(1)
     MainGameScreen.main()
     # When the eventloop stops, this is ran and sends a disconnect signal to the server, which closes the connection
-    sleep(1)
+    sleep(0.5)
     ServerConnect.sendCommandToServer('disconnect')
 
 # This is ran at the start of the application which tries to connect to the server

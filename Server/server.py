@@ -12,16 +12,19 @@ from twisted.internet import reactor
 
 # Here the port and ip of the server are defined
 port = 5555
-host = '127.0.0.1'
+host = ''
 
 # Here a FIFO queue is made that makes sure that a command is only performed once
+global commandQueue
 commandQueue = Queue()
 
-# Just function to test sending info back to a certain client
-def testWrite(command, client):
-    encodedCommand = str.encode(command)
-    client.transport.write(bytes(encodedCommand))
-    print('sent: ' + command)
+# Function that will repeatedly perform commands received from the clients
+def performCommands():
+    global commandQueue
+    while True:
+        command = commandQueue.get()
+        if command['command'] == 'disconnect':
+            command['ClientHandler'].transport.abortConnection()
     
 # This is the ClientHandler class (A twisted Protocol). One of these is made everytime a new client connects
 # It overrides funcions that handle different things 
@@ -37,10 +40,10 @@ class ClientHandler(LineReceiver):
         self.users.append({'ClientHandler': self})
     
     def rawDataReceived(self, command):
+        global commandQueue
         command = command.decode()
         print('received: ' + command)
-        if command == 'disconnect':
-            self.transport.abortConnection()
+        commandQueue.put({'command': command, 'ClientHandler': self})
         
 
     def connectionLost(self, reason):
@@ -58,9 +61,24 @@ class Server(Factory):
 
 server = Server()
 
+# This makes threads that will perform the commands
+commandPerformingThread1 = Thread(target=performCommands)
+commandPerformingThread1.daemon = True
+commandPerformingThread1.start()
+commandPerformingThread2 = Thread(target=performCommands)
+commandPerformingThread2.daemon = True
+commandPerformingThread2.start()
+commandPerformingThread3 = Thread(target=performCommands)
+commandPerformingThread3.daemon = True
+commandPerformingThread3.start()
+commandPerformingThread4 = Thread(target=performCommands)
+commandPerformingThread4.daemon = True
+commandPerformingThread4.start()
+
 # This will run the server on the specified ip and port and run the twisted eventloop
 reactor.listenTCP(port, server, interface=host)
 reactor.run()
+
 # This will run when ctrl-c is pressed and send a signal to every client telling them the server went down
 for user in server.users:
     user['ClientHandler'].transport.write(bytes('server went down'.encode()))
