@@ -19,7 +19,9 @@ from prompt_toolkit.styles import *
 from prompt_toolkit.history import *
 from prompt_toolkit.output.base import *
 
+# Module which contains the prompt_toolkit application and it's eventloop
 
+# This defines the function of every of the four major output windows and the text they should contain
 outputArea1Function = ''
 outputArea2Function = ''
 outputArea3Function = ''
@@ -29,8 +31,10 @@ playerInfoWindowText = ''
 commandOutputWindowText = ''
 chatWindowText = ''
 
+# This defines the queue object that will order the different updates of the screen as FIFO (FirstInFirstOut)
 screenUpdateQueue = Queue()
 
+# This defines the different objects that together will form vertical and horizontal splits
 commandInputArea = TextArea(height=1, prompt=' >', style='class:input-field', multiline=False,wrap_lines=False, history=FileHistory('history.txt'))
 horizontalLine = Window(height=1, char='-', style='class:line')
 verticalLineExtra = Window(width=2, char='| ', style='class:line')
@@ -42,6 +46,7 @@ outputArea3 = TextArea(style='class:output-field', height=20)
 outputArea4 = TextArea(style='class:output-field')
 corner = TextArea(multiline=False , height=1, width=1, text='+', read_only=True)
 
+# This defines the different splits that together will form the layout of the application
 outputAreas1And2 = HSplit([outputArea1, horizontalLine, outputArea2])
 outputAreas3And4 = HSplit([outputArea3, horizontalLine, outputArea4])
 horizontalDoubleCornerLine = VSplit([corner, horizontalLine, corner])
@@ -50,27 +55,34 @@ commandInputSplit = VSplit([verticalLine, commandInputArea, verticalLine])
 sideSplit = VSplit([corner, horizontalLine, corner])
 mainContainer = HSplit([sideSplit, horizontalDoubleCornerLine, mainTextSplit, horizontalDoubleCornerLine, commandInputSplit, sideSplit])
 
+# This is ran everytime the user inputs a command via the commandInputArea object
 def commandAcceptHandler(buff):
     checkGivenCommand(commandInputArea.text)
 
+# This binds the accept handler to the input area
 commandInputArea.accept_handler = commandAcceptHandler
 
+# Here the layout is made
 layout = Layout(mainContainer, focused_element = commandInputArea)
 kb = KeyBindings()
 
+# This adds a keybind to the KeyBindings object
 @kb.add('c-q')
 def exit_(event):
     event.app.exit()
 
+# This defines the style of the application
 style = Style([
             ('output-field', 'bg:#000000 #ffffff'),
             ('input-field', 'bg:#000000 #ffffff'),
             ('line',        '#ffffff'),
               ])
+
+# Here the Application object is defined
 global app
 app = Application(layout=layout, full_screen=True, key_bindings=kb, style=style, mouse_support=True)
 
-
+# This is the function that will update the screen with as parameter a list of all the changes to be made
 def updateScreen(changeList):
     global app
     if changeList == 'server went down':
@@ -183,7 +195,8 @@ def updateScreen(changeList):
             if change[1] == 'chatWindow':
                 outputArea4Function = 'chatWindow'
                 outputArea4.text = chatWindowText
-        
+
+# This function just runs the application      
 def main():
     global app
     app.run()

@@ -4,9 +4,13 @@ from time import *
 from threading import *
 from sys import exit
 
+# The main module which starts all the different threads and the application's eventloop
+
+# The ip and port of the server
 host = '127.0.0.1'
 port = 5555
 
+# This will be ran by the thread that handles the screen updates
 def doScreenUpdates():
     while True:
         if MainGameScreen.screenUpdateQueue.empty() == False:
@@ -15,6 +19,7 @@ def doScreenUpdates():
             MainGameScreen.updateScreen(screenUpdate)
         sleep(0.05)
 
+# This starts up the threads and eventloop of the application
 def startGame():
     print('You have been succesfully connected to the server.')
     getUpdatesFromServerThread = Thread(target=ServerConnect.getUpdatesFromServer, args=(MainGameScreen.screenUpdateQueue,))
@@ -25,9 +30,11 @@ def startGame():
     screenUpdateThread.start()
     sleep(1)
     MainGameScreen.main()
+    # When the eventloop stops, this is ran and sends a disconnect signal to the server, which closes the connection
     sleep(1)
     ServerConnect.sendCommandToServer('disconnect')
 
+# This is ran at the start of the application which tries to connect to the server
 connectionOutcome = ServerConnect.connectToServer(host, port)
 if connectionOutcome == 'succesfull connection':
     startGame()
