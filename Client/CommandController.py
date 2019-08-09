@@ -1,11 +1,13 @@
 import MainGameScreen
+import GameState
+from ServerConnect import *
 
 # Module which handles the commands that the user inputs
 
 # This performs any offline commands that the user inputs
 def doOfflineCommandAction(commandAction):
     if commandAction == 'change screen config':
-        MainGameScreen.screenUpdateQueue.put([['outputArea1Function', 'inventoryWindow'], ['outputArea2Function', 'commandOutputWindow'], ['outputArea3Function', 'playerInfoWindow'], ['outputArea4Function', 'chatWindow'], ['playerInfoWindowText', 'Testest'], ['commandOutputWindowText', 'Tester'], ['inventoryWindowText', 'Test'], ['chatWindowText', 'Testester']])
+        GameState.screenUpdateQueue.put([['outputArea1Function', 'inventoryWindow'], ['outputArea2Function', 'commandOutputWindow'], ['outputArea3Function', 'playerInfoWindow'], ['outputArea4Function', 'chatWindow']])
 
 # This checks if the inputted command is formatted correctly and exists
 def checkGivenCommand(command):
@@ -16,4 +18,6 @@ def checkGivenCommand(command):
     if commandList == ['change', 'screen', 'config']:
         commandAction = 'change screen config'
         doOfflineCommandAction(commandAction)
+    elif commandList == ['go', 'north']:
+        sendCommandToServer('go north')
 

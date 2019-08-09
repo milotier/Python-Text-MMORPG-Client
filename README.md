@@ -6,7 +6,7 @@ Firstly, make sure that Python and pip3 are installed on your computer. You will
 
 Then you need to copy the repository to your computer.
 
-Extra step for windows users: To install some of the required libraries, you need to first download Microsoft Visual C++ from https://visualstudio.microsoft.com/downloads/
+Extra step for windows users: To install some of the required libraries, you need to first download Microsoft Visual C++ from https://visualstudio.microsoft.com/downloads/ (This is only for the libraries used by the server, so when the server will be hosted you won't need this to play)
 
 Once that is done, you need to install the required libraries with pip3. To do that, open the shell of your OS, use cd to go to the location of the repository. In the repository should be a file called requirements.txt. That file contains the names of the libraries. To install them, make sure that you are in the right directory. Then type in the command 'pip3 install -r requirements.txt'. 
 

@@ -1,11 +1,22 @@
 from socket import *
-from time import sleep
+from ast import literal_eval
 
 # Module which handles the connection with the server
+
 
 # This makes the socket object
 global client
 client = socket(AF_INET, SOCK_STREAM)
+
+def recvall(sock):
+    data = b''
+    bufsize = 4096
+    while True:
+        packet = sock.recv(bufsize)
+        data += packet
+        if len(packet) < bufsize:
+            break
+    return data
 
 # This tries to make a connection to the server
 def connectToServer(host, port):
@@ -13,7 +24,8 @@ def connectToServer(host, port):
     try:
         client.connect((host, port))
         connectionResult = client.recv(2048).decode()
-        if connectionResult == 'succesfull connection':
+        
+        if connectionResult == 'successfull connection':
             return connectionResult
         if not connectionResult:
             return 'connection failed'
@@ -27,12 +39,15 @@ def connectToServer(host, port):
 def getUpdatesFromServer(updateQueue):
     global client
     while True:
-        receivedUpdate = client.recv(10000).decode()
-
-        if not receivedUpdate or receivedUpdate == 'server went down':
+        data = recvall(client)
+        data = data.decode()
+        if data == 'server went down' or not data:
             updateQueue.put('server went down')
-
+        if type(literal_eval(data)) == dict:
+            updateQueue.put(literal_eval(data))
+    
 # This sends the commands inputted by the user to the server
 def sendCommandToServer(sendingCommand):
+    global client
     sendingCommand = sendingCommand.encode()
     client.sendall(bytes(sendingCommand))
