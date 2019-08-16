@@ -25,13 +25,16 @@ from prompt_toolkit.output.base import *
 # This defines the different objects that together will form vertical and horizontal splits
 commandInputArea = TextArea(height=1, prompt=' >', style='class:input-field', multiline=False,wrap_lines=False, history=FileHistory('history.txt'))
 horizontalLine = Window(height=1, char='-', style='class:line')
-verticalLineExtra = Window(width=2, char='| ', style='class:line')
+verticalLineTop = Window(width=1, height=3, char='|', style='class:line')
 verticalLine = Window(width=1, char='|', style='class:line')
 sideLine = Window(width=1, style='class:line')
 outputArea1 = TextArea(style='class:output-field', height=20)
 outputArea2 = TextArea(style='class:output-field', height=20)
 outputArea3 = TextArea(style='class:output-field')
 outputArea4 = TextArea(style='class:output-field')
+locationArea = TextArea(style='class:output-field', height=2)
+playerInfoArea = TextArea(style='class:output-field', height=2)
+descriptionArea = TextArea(style='class:output-field', height=2)
 corner = TextArea(multiline=False , height=1, width=1, text='+', read_only=True)
 
 # This defines the different splits that together will form the layout of the application
@@ -41,17 +44,20 @@ horizontalDoubleCornerLine = VSplit([corner, horizontalLine, corner])
 mainTextSplit = VSplit([verticalLine, outputAreas1And2, verticalLine, outputAreas3And4, verticalLine])
 commandInputSplit = VSplit([verticalLine, commandInputArea, verticalLine])
 sideSplit = VSplit([corner, horizontalLine, corner])
-mainContainer = HSplit([sideSplit, horizontalDoubleCornerLine, mainTextSplit, horizontalDoubleCornerLine, commandInputSplit, sideSplit])
+topSplit = VSplit([verticalLineTop, locationArea, verticalLineTop, playerInfoArea, verticalLineTop, descriptionArea, verticalLineTop])
+mainContainer = HSplit([sideSplit, topSplit, horizontalDoubleCornerLine, mainTextSplit, horizontalDoubleCornerLine, commandInputSplit, sideSplit])
+
 
 # This is ran everytime the user inputs a command via the commandInputArea object
 def commandAcceptHandler(buff):
-    CommandController.checkGivenCommand(commandInputArea.text)
+    if not commandInputArea.text.isspace() == True and commandInputArea.text != '' and not len(commandInputArea.text) > 50:
+            CommandController.checkGivenCommand(commandInputArea.text)
 
 # This binds the accept handler to the input area
 commandInputArea.accept_handler = commandAcceptHandler
 
 # Here the layout is made
-layout = Layout(mainContainer, focused_element = commandInputArea)
+layout = Layout(mainContainer, focused_element=commandInputArea)
 kb = KeyBindings()
 
 # This adds a keybind to the KeyBindings object
@@ -72,44 +78,64 @@ app = Application(layout=layout, full_screen=True, key_bindings=kb, style=style,
 
 # This is the function that will update the screen with as parameter a list of all the changes to be made
 def updateScreen():
-    print(GameState.outputArea2Function)
     if GameState.outputArea1Function == 'commandOutputWindow':
+        outputArea1.buffer.document = Document(text=GameState.commandOutputWindowText, cursor_position=len(GameState.commandOutputWindowText))
         outputArea1.text = GameState.commandOutputWindowText
-    if GameState.outputArea1Function == 'playerInfoWindow':
-        outputArea1.text = GameState.playerInfoWindowText
+    if GameState.outputArea1Function == 'skillWindow':
+        outputArea1.buffer.document = Document(text=GameState.skillWindowText, cursor_position=len(GameState.skillWindowText))
+        outputArea1.text = GameState.skillWindowText
     if GameState.outputArea1Function == 'chatWindow':
+        outputArea1.buffer.document = Document(text=GameState.chatWindowText, cursor_position=len(GameState.chatWindowText))
         outputArea1.text = GameState.chatWindowText
     if GameState.outputArea1Function == 'inventoryWindow':
+        outputArea1.buffer.document = Document(text=GameState.inventoryWindowText, cursor_position=len(GameState.inventoryWindowText))
         outputArea1.text = GameState.inventoryWindowText
 
     if GameState.outputArea2Function == 'commandOutputWindow':
+        outputArea2.buffer.document = Document(text=GameState.commandOutputWindowText, cursor_position=len(GameState.inventoryWindowText))
         outputArea2.text = GameState.commandOutputWindowText
-    if GameState.outputArea2Function == 'playerInfoWindow':
-        outputArea2.text = GameState.playerInfoWindowText
+    if GameState.outputArea2Function == 'skillWindow':
+        outputArea2.buffer.document = Document(text=GameState.skillWindowText, cursor_position=len(GameState.skillWindowText))
+        outputArea2.text = GameState.skillWindowText
     if GameState.outputArea2Function == 'chatWindow':
+        outputArea2.buffer.document = Document(text=GameState.chatWindowText, cursor_position=len(GameState.chatWindowText))
         outputArea2.text = GameState.chatWindowText
     if GameState.outputArea2Function == 'inventoryWindow':
+        outputArea2.buffer.document = Document(text=GameState.inventoryWindowText, cursor_position=len(GameState.inventoryWindowText))
         outputArea2.text = GameState.inventoryWindowText
 
     if GameState.outputArea3Function == 'commandOutputWindow':
         outputArea3.text = GameState.commandOutputWindowText
-    if GameState.outputArea3Function == 'playerInfoWindow':
-        outputArea3.text = GameState.playerInfoWindowText
+        outputArea3.buffer.document = Document(text=GameState.commandOutputWindowText, cursor_position=len(GameState.commandOutputWindowText))
+    if GameState.outputArea3Function == 'skillWindow':
+        outputArea3.text = GameState.skillWindowText
+        outputArea3.buffer.document = Document(text=GameState.skillWindowText, cursor_position=len(GameState.skillWindowText))
     if GameState.outputArea3Function == 'chatWindow':
         outputArea3.text = GameState.chatWindowText
+        outputArea3.buffer.document = Document(text=GameState.chatWindowText, cursor_position=len(GameState.chatWindowText))
     if GameState.outputArea3Function == 'inventoryWindow':
         outputArea3.text = GameState.inventoryWindowText
+        outputArea3.buffer.document = Document(text=GameState.inventoryWindowText, cursor_position=len(GameState.inventoryWindowText))
 
     if GameState.outputArea4Function == 'commandOutputWindow':
         outputArea4.text = GameState.commandOutputWindowText
-    if GameState.outputArea4Function == 'playerInfoWindow':
-        outputArea4.text = GameState.playerInfoWindowText
+        outputArea4.buffer.document = Document(text=GameState.commandOutputWindowText, cursor_position=len(GameState.commandOutputWindowText))
+    if GameState.outputArea4Function == 'skillWindow':
+        outputArea4.text = GameState.skillWindowText
+        outputArea4.buffer.document = Document(text=GameState.skillWindowText, cursor_position=len(GameState.skillWindowText))
     if GameState.outputArea4Function == 'chatWindow':
         outputArea4.text = GameState.chatWindowText
+        outputArea4.buffer.document = Document(text=GameState.chatWindowText, cursor_position=len(GameState.chatWindowText))
     if GameState.outputArea4Function == 'inventoryWindow':
         outputArea4.text = GameState.inventoryWindowText
-
-
+        outputArea4.buffer.document = Document(text=GameState.inventoryWindowText, cursor_position=len(GameState.inventoryWindowText))
+ 
+    if 'name' in GameState.playerLocation:
+        locationText = '\n ' + GameState.playerLocation['name']
+        locationArea.buffer.document = Document(text=locationText)
+    
+    
+    
 # This function just runs the application      
 def main():
     global app

@@ -39,7 +39,8 @@ def startGame():
 
 # This is ran at the start of the application which tries to connect to the server
 connectionOutcome = ServerConnect.connectToServer(host, port)
-if connectionOutcome == 'successfull connection':
+if type(connectionOutcome) == dict:
+    GameState.screenUpdateQueue.put(connectionOutcome)
     startGame()
 else:
     print('\n\nFailed to connect to the server. Please check your internet connection. If your internet connection is okay, it probably means the server is down and you should wait for a while.\n\n')

@@ -1,5 +1,6 @@
 import lmdb
 from struct import *
+from ast import literal_eval
 
 def startupDatabase():
     global env
@@ -9,33 +10,79 @@ def startupDatabase():
     return env
     return staticWorldDB
 
+def getPlayerLocation(clientHandler, env, staticWorldDB):
+    txn = env.begin(db=staticWorldDB)
+    cursor = txn.cursor(db=staticWorldDB)
+    playerLocation = clientHandler.location
+    updateArea = {}
+    xCoord = playerLocation[0] - 1
+    yCoord = playerLocation[1] + 1
+    for i in range(3):
+        for i in range(3):
+            isValidField = True
+            try:
+                key = pack('II', xCoord, yCoord)
+                fieldIsThere = cursor.set_key(key)
+            except:
+                isValidField = False
+            if isValidField == True:
+                fieldKey = ''
+                if yCoord == playerLocation[1] + 1:
+                    fieldKey += 'north '
+                elif yCoord == playerLocation[1] - 1:
+                    fieldKey += 'south '
+                if xCoord == playerLocation[0] + 1:
+                    fieldKey += 'east'
+                elif xCoord == playerLocation[0] - 1:
+                    fieldKey += 'west'
+                if xCoord == playerLocation[0] and yCoord == playerLocation[1]:
+                    fieldKey += 'center'
+                if fieldIsThere == True:
+                    field = literal_eval(cursor.value().decode())
+                    updateArea[fieldKey] = field
+            yCoord -= 1
+        xCoord += 1
+        yCoord = playerLocation[1] + 1
+    return updateArea
+
 def movePlayer(clientHandler, direction, env, staticWorldDB):
     playerLocation = clientHandler.location
     txn = env.begin(db=staticWorldDB)
     cursor = txn.cursor(db=staticWorldDB)
+
+    fieldIsThere = False
     if direction == 'north':
-        fieldIsThere = cursor.set_key(pack('II', playerLocation[0], playerLocation[1] + 1))
+        try:
+            fieldIsThere = cursor.set_key(pack('II', playerLocation[0], playerLocation[1] + 1))
+        except struct.error:
+            fieldIsThere = False
         if fieldIsThere == True:
             clientHandler.location[1] += 1
-            updateArea = {}
-            xCoord = playerLocation[0] - 1
-            yCoord = playerLocation[1] + 1
-            for i in range(3):
-                for i in range(3):
-                    isValidField = True
-                    try:
-                        key = pack('II', xCoord, yCoord)
-                        fieldIsThere = cursor.set_key(key)
-                    except:
-                        isValidField = False
-                    if isValidField == True:
-                        if fieldIsThere == True:
-                            field = cursor.value()
-                            updateArea[key] = field
-                    yCoord -= 1
-                xCoord += 1
-                yCoord = playerLocation[1] + 1
-            return updateArea
-        else:
-            return 'destination invalid'
+    if direction == 'south':
+        try:
+            fieldIsThere = cursor.set_key(pack('II', playerLocation[0], playerLocation[1] - 1))
+        except struct.error:
+            fieldIsThere = False
+        if fieldIsThere == True:
+            clientHandler.location[1] -= 1
+    if direction == 'east':
+        try:
+            fieldIsThere = cursor.set_key(pack('II', playerLocation[0] + 1, playerLocation[1]))
+        except struct.error:
+            fieldIsThere = False
+        if fieldIsThere == True:
+            clientHandler.location[0] += 1
+    if direction == 'west':
+        try:
+            fieldIsThere = cursor.set_key(pack('II', playerLocation[0] - 1, playerLocation[1]))
+            print(fieldIsThere)
+        except struct.error:
+            fieldIsThere = False
+        if fieldIsThere == True:
+            clientHandler.location[0] -= 1
+    if fieldIsThere == True:
+        updateArea = getPlayerLocation(clientHandler, env, staticWorldDB)
+        return updateArea
+    else:
+        return 'destination invalid'
 

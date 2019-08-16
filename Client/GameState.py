@@ -10,23 +10,25 @@ global outputArea2Function
 global outputArea3Function
 global outputArea4Function
 outputArea1Function = 'inventoryWindow'
-outputArea2Function = 'playerInfoWindow'
+outputArea2Function = 'skillWindowText'
 outputArea3Function = 'commandOutputWindow'
 outputArea4Function = 'chatWindow'
 inventoryWindowText = 'test'
-playerInfoWindowText = 'tester'
-commandOutputWindowText = 'testest'
-chatWindowText = 'testester'
+skillWindowText = 'teste'
+commandOutputWindowText = 'testeee'
+chatWindowText = 'testeeeeee'
 
 global area
 area = {}
+global playerLocation
+playerLocation = {}
 
 # This defines the queue object that will order the different updates of the screen as FIFO (FirstInFirstOut)
 screenUpdateQueue = Queue()
 
 
 def updateState(updates, app):
-    global playerInfoWindowText
+    global skillWindowText
     global commandOutputWindowText
     global inventoryWindowText
     global chatWindowText
@@ -35,6 +37,7 @@ def updateState(updates, app):
     global outputArea3Function
     global outputArea4Function
     global area
+    global playerLocation
     if updates == 'server went down':
         try:
             app.exit()
@@ -46,8 +49,8 @@ def updateState(updates, app):
     if type(updates) == list:
         for change in updates:
             if change[0] == 'outputArea1Function':
-                if change[1] == 'playerInfoWindow':
-                    outputArea1Function = 'playerInfoWindow'
+                if change[1] == 'skillWindow':
+                    outputArea1Function = 'skillWindow'
                 if change[1] == 'commandOutputWindow':
                     outputArea1Function = 'commandOutputWindow'
                 if change[1] == 'inventoryWindow':
@@ -55,8 +58,8 @@ def updateState(updates, app):
                 if change[1] == 'chatWindow':
                     outputArea1Function = 'chatWindow'
             elif change[0] == 'outputArea2Function':
-                if change[1] == 'playerInfoWindow':
-                    outputArea2Function = 'playerInfoWindow'
+                if change[1] == 'skillWindow':
+                    outputArea2Function = 'skillWindow'
                 if change[1] == 'commandOutputWindow':
                     outputArea2Function = 'commandOutputWindow'
                 if change[1] == 'inventoryWindow':
@@ -64,8 +67,8 @@ def updateState(updates, app):
                 if change[1] == 'chatWindow':
                     outputArea2Function = 'chatWindow'
             elif change[0] == 'outputArea3Function':
-                if change[1] == 'playerInfoWindow':
-                    outputArea3Function = 'playerInfoWindow'
+                if change[1] == 'skillWindow':
+                    outputArea3Function = 'skillWindow'
                 if change[1] == 'commandOutputWindow':
                     outputArea3Function = 'commandOutputWindow'
                 if change[1] == 'inventoryWindow':
@@ -73,18 +76,19 @@ def updateState(updates, app):
                 if change[1] == 'chatWindow':
                     outputArea3Function = 'chatWindow'
             elif change[0] == 'outputArea4Function':
-                if change[1] == 'playerInfoWindow':
-                    outputArea4Function = 'playerInfoWindow'
+                if change[1] == 'skillWindow':
+                    outputArea4Function = 'skillWindow'
                 if change[1] == 'commandOutputWindow':
                     outputArea4Function = 'commandOutputWindow'
                 if change[1] == 'inventoryWindow':
                     outputArea4Function = 'inventoryWindow'
                 if change[1] == 'chatWindow':
                     outputArea4Function = 'chatWindow'
-    else:
+    elif type(updates) == dict:
         if 'update' in updates:
             if 'fields' in updates['update']:
                 area = updates['update']['fields']
+                playerLocation = area['center']
     
     outputArea4Function = 'chatWindow'
-    chatWindowText = area
+    chatWindowText = repr(area)

@@ -1,5 +1,6 @@
 from socket import *
 from ast import literal_eval
+from json import *
 
 # Module which handles the connection with the server
 
@@ -23,10 +24,9 @@ def connectToServer(host, port):
     global client
     try:
         client.connect((host, port))
-        connectionResult = client.recv(2048).decode()
-        
-        if connectionResult == 'successfull connection':
-            return connectionResult
+        connectionResult = recvall(client).decode()
+        if type(literal_eval(connectionResult)) == dict:
+            return literal_eval(connectionResult)
         if not connectionResult:
             return 'connection failed'
         else:
@@ -49,5 +49,8 @@ def getUpdatesFromServer(updateQueue):
 # This sends the commands inputted by the user to the server
 def sendCommandToServer(sendingCommand):
     global client
-    sendingCommand = sendingCommand.encode()
-    client.sendall(bytes(sendingCommand))
+    commandType = str(type(sendingCommand).__name__)
+    command = {commandType: sendingCommand}
+    sendingCommand = dumps(command, default=lambda o: o.__dict__, sort_keys=True)
+    sendingCommand = bytes(sendingCommand.encode())
+    client.sendall(sendingCommand)

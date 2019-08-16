@@ -10,6 +10,7 @@ from twisted.application.internet import TCPServer
 from twisted.internet import reactor
 import lmdb
 from time import sleep
+from ast import literal_eval
 
 
 # The server module (needless to say)
@@ -30,13 +31,14 @@ class ClientHandler(LineReceiver):
     
     def connectionMade(self):
         print(self)
-        self.transport.write(bytes('successfull connection'.encode()))
+        area = Database.getPlayerLocation(self, env, staticWorldDB)
+        update = {}
+        update['update'] = {'fields': area}
+        self.transport.write(bytes(repr(update).encode()))
         self.users.append({'ClientHandler': self})
     
     def rawDataReceived(self, command):
         global commandQueue
-        command = command.decode()
-        print('received: ' + command)
         CommandHandler.commandQueue.put({'command': command, 'ClientHandler': self})
         
 
@@ -61,6 +63,8 @@ server = Server()
 
 # This starts up the lmdb environment
 #env, staticWorldDB = Database.startupDatabase()
+global env
+global staticWorldDB
 env = lmdb.open('GameDatabase', map_size = 1000000, max_dbs=20)
 staticWorldDB = env.open_db(bytes('StaticWorld'.encode()))
 
