@@ -11,9 +11,11 @@ from jsonpickle import *
 global commandQueue
 commandQueue = Queue()
 
+# This is the list of updates that need to sent to the clients
 global updateList
 updateList = []
 
+# These are the different classes which make up the different commands
 class Direction:
     def __init__(self, direction, inputDirection, directionCommentFactor):
         self.direction = direction
@@ -38,6 +40,7 @@ class TravelCommand(Command):
         super().__init__(verbCommentFactor, inputVerb, [directionCommentFactor])
         self.direction = Direction(direction, inputDirection, directionCommentFactor)
 
+# This will make a command object based on what type of command the server has received
 def makeCommand(command):
     if 'TravelCommand' in command:
         command = command['TravelCommand']

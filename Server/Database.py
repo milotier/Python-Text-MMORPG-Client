@@ -2,6 +2,7 @@ import lmdb
 from struct import *
 from ast import literal_eval
 
+# This starts up the lmdb environment and the databases in it
 def startupDatabase():
     global env
     env = lmdb.open('GameDatabase', map_size = 1000000, max_dbs=20)
@@ -10,6 +11,7 @@ def startupDatabase():
     return env
     return staticWorldDB
 
+# This gets the nine (or less) fields around the player
 def getPlayerLocation(clientHandler, env, staticWorldDB):
     txn = env.begin(db=staticWorldDB)
     cursor = txn.cursor(db=staticWorldDB)
@@ -45,6 +47,7 @@ def getPlayerLocation(clientHandler, env, staticWorldDB):
         yCoord = playerLocation[1] + 1
     return updateArea
 
+# This moves the player in the given direction
 def movePlayer(clientHandler, direction, env, staticWorldDB):
     playerLocation = clientHandler.location
     txn = env.begin(db=staticWorldDB)

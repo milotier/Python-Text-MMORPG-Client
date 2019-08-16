@@ -26,7 +26,7 @@ playerLocation = {}
 # This defines the queue object that will order the different updates of the screen as FIFO (FirstInFirstOut)
 screenUpdateQueue = Queue()
 
-
+# This updates the game state
 def updateState(updates, app):
     global skillWindowText
     global commandOutputWindowText

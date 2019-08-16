@@ -7,6 +7,7 @@ import time
 
 # Module which handles the commands that the user inputs
 
+# These are the different classes which make up the different commands
 class Direction:
     def __init__(self, direction, inputDirection, directionCommentFactor):
         self.direction = direction
@@ -37,7 +38,7 @@ def doOfflineCommandAction(commandAction):
     if commandAction == 'change screen config':
         GameState.screenUpdateQueue.put([['outputArea1Function', 'inventoryWindow'], ['outputArea2Function', 'commandOutputWindow'], ['outputArea3Function', 'skillWindow'], ['outputArea4Function', 'chatWindow']])
 
-
+# This changes the string inputted by the player into a list of tokens
 def lexGivenCommand(characters):
     tokenExprs = [
     (r'go',          True,          {'type': 'verb', 'verbType': 'travel', 'commentFactor': 1, 'input': 'go'}),
@@ -96,6 +97,7 @@ def lexGivenCommand(characters):
         tokenList.append(token)
     return tokenList
 
+# This parses the list of tokens made by the lexer into a command object
 def parseGivenCommand(tokenList):
     command = None
     if tokenList[0]['type'] == 'verb':
