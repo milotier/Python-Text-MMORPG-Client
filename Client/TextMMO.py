@@ -4,6 +4,7 @@ from time import *
 from threading import *
 from sys import exit
 import GameState
+from getpass import *
 
 # The main module which starts all the different threads and the application's eventloop
 
@@ -22,7 +23,7 @@ def doScreenUpdates():
 
 # This starts up the threads and eventloop of the application
 def startGame():
-    print('You have been succesfully connected to the server.')
+    print('\n\nYou have been succesfully connected to the server.\n\n')
     MainGameScreen.updateScreen()
     getUpdatesFromServerThread = Thread(target=ServerConnect.getUpdatesFromServer, args=(GameState.screenUpdateQueue,))
     getUpdatesFromServerThread.daemon = True
@@ -37,10 +38,14 @@ def startGame():
     ServerConnect.sendCommandToServer('disconnect')
     print('\n\nYou have been disconnected from the server.\n\n')
 
+print('\nLogin to your account:\n\n')
+userName = input('Please enter your username: ')
+password = getpass('Please enter your password: ')
+
 # This is ran at the start of the application which tries to connect to the server
 connectionOutcome = ServerConnect.connectToServer(host, port)
-if type(connectionOutcome) == dict:
-    GameState.screenUpdateQueue.put(connectionOutcome)
+if type(connectionOutcome) == list:
+    GameState.screenUpdateQueue.put(connectionOutcome[0])
     startGame()
 else:
     print('\n\nFailed to connect to the server. Please check your internet connection. If your internet connection is okay, it probably means the server is down and you should wait for a while.\n\n')

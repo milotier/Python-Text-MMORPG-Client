@@ -62,6 +62,18 @@ def lexGivenCommand(characters):
     (r'e',           True,          {'type': 'direction', 'direction': 'east', 'commentFactor': 0, 'input': 'e'}),
     (r'west',        True,          {'type': 'direction', 'direction': 'west', 'commentFactor': 1, 'input': 'west'}),
     (r'w',           True,          {'type': 'direction', 'direction': 'west', 'commentFactor': 0, 'input': 'w'}),
+    (r'northeast',   True,          {'type': 'direction', 'direction': 'north-east', 'commentFactor': 1, 'input': 'northeast'}),
+    (r'north-east',  True,          {'type': 'direction', 'direction': 'north-east', 'commentFactor': 2, 'input': 'north-east'}),
+    (r'ne',          True,          {'type': 'direction', 'direction': 'north-east', 'commentFactor': 0, 'input': 'ne'}),
+    (r'northwest',   True,          {'type': 'direction', 'direction': 'north-west', 'commentFactor': 1, 'input': 'northwest'}),
+    (r'north-west',  True,          {'type': 'direction', 'direction': 'north-west', 'commentFactor': 2, 'input': 'north-west'}),
+    (r'nw',          True,          {'type': 'direction', 'direction': 'north-west', 'commentFactor': 0, 'input': 'nw'}),
+    (r'southeast',   True,          {'type': 'direction', 'direction': 'south-east', 'commentFactor': 1, 'input': 'southeast'}),
+    (r'south-east',  True,          {'type': 'direction', 'direction': 'south-east', 'commentFactor': 2, 'input': 'south-east'}),
+    (r'se',          True,          {'type': 'direction', 'direction': 'south-east', 'commentFactor': 0, 'input': 'se'}),
+    (r'southwest',   True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 1, 'input': 'southwest'}),
+    (r'south-west',  True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 2, 'input': 'north-west'}),
+    (r'sw',          True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 0, 'input': 'sw'}),
 
     (r'[A-Za-z][A-Za-z0-9_]*', False, {'type': 'name'})
     ]

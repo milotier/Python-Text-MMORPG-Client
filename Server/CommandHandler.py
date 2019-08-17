@@ -59,11 +59,13 @@ def performCommands(env, staticWorldDB, reactor):
             while commandQueue.empty() == False:
                 command = commandQueue.get()
                 command['command'] = loads(command['command'])
-                print(command['command'])
-                if command['command'] == 'disconnect':
-                    command['ClientHandler'].transport.abortConnection()
+                if 'str' in command['command']:
+                    if command['command']['str'] == 'disconnect':
+                        print('aborted connection')
+                        command['ClientHandler'].transport.abortConnection()
                 else:
                     command['command'] = makeCommand(command['command'])
+
                 if type(command['command']) == TravelCommand:
                     outcome = movePlayer(command['ClientHandler'], command['command'].direction.direction, env, staticWorldDB)
                     if type(outcome) == dict:
@@ -78,6 +80,6 @@ def performCommands(env, staticWorldDB, reactor):
         while mode == 2:
             while len(updateList) > 0:
                 update = updateList.pop(0)
-                reactor.callFromThread(update['ClientHandler'].transport.write, bytes(repr(update['updates']).encode()))
+                reactor.callFromThread(update['ClientHandler'].sendData, update['updates'])
                 print('Update sent.')
             mode = 1

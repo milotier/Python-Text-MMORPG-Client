@@ -1,3 +1,5 @@
 prompt_toolkit
 twisted
 lmdb
+cryptography
+passlib

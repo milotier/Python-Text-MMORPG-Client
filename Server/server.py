@@ -11,7 +11,7 @@ from twisted.internet import reactor
 import lmdb
 from time import sleep
 from ast import literal_eval
-
+from cryptography.fernet import Fernet
 
 # The server module (needless to say)
 
@@ -26,29 +26,37 @@ class ClientHandler(LineReceiver):
 
     def __init__(self, users):
         self.users = users
-        self.location = [0, 0]
+        self.location = [0, 0, 5]
         self.setRawMode()
+        self.key = Fernet.generate_key()
+        self.isLoggedIn = True
     
     def connectionMade(self):
         print(self)
         area = Database.getPlayerLocation(self, env, staticWorldDB)
         update = {}
         update['update'] = {'fields': area}
-        self.transport.write(bytes(repr(update).encode()))
+        message = [update, self.key]
+        self.transport.write(bytes(repr(message).encode()))
         self.users.append({'ClientHandler': self})
     
     def rawDataReceived(self, command):
-        global commandQueue
-        CommandHandler.commandQueue.put({'command': command, 'ClientHandler': self})
-        
+        if self.isLoggedIn == True:
+            global commandQueue
+            f = Fernet(self.key)
+            command = f.decrypt(command)
+            CommandHandler.commandQueue.put({'command': command, 'ClientHandler': self})
+        else:
+            pass
 
     def connectionLost(self, reason):
         print(reason.type)
         print('Connection lost.')
     
     def sendData(self, data):
-        print('This happens')
-        self.transport.write(bytes(data.encode()))
+        f = Fernet(self.key)
+        data = f.encrypt(bytes(repr(data).encode()))
+        self.transport.write(data)
 
 # This is the twisted factory that will make new CientHandlers
 class Server(Factory):
