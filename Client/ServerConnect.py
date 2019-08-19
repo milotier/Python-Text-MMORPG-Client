@@ -14,6 +14,7 @@ global clientKey
 clientKey = ''
 
 def recvall(sock):
+    global clientKey
     data = b''
     bufsize = 4096
     while True:
@@ -29,10 +30,10 @@ def connectToServer(host, port):
     global clientKey
     try:
         client.connect((host, port))
-        connectionResult = literal_eval(recvall(client).decode())
-        if type(connectionResult) == list:
-            clientKey = connectionResult[1]
-            return connectionResult
+        connectionResult = recvall(client)
+        if type(connectionResult) == bytes:
+            clientKey = connectionResult
+            return 'successfull connection'
         if not connectionResult:
             return 'connection failed'
         else:
@@ -61,5 +62,22 @@ def sendCommandToServer(sendingCommand):
     command = {commandType: sendingCommand}
     sendingCommand = bytes(dumps(command, default=lambda o: o.__dict__, sort_keys=True).encode())
     f = Fernet(clientKey)
-    sendingCommand = f.encrypt(sendingCommand)
+    sendingCommand = f.encrypt(bytes(repr(sendingCommand).encode()))
     client.sendall(sendingCommand)
+
+def loginToAccount(accountDetails):
+    global client
+    f = Fernet(clientKey)
+    accountDetails = f.encrypt(bytes(repr(accountDetails).encode()))
+    client.sendall(accountDetails)
+
+def createAccount(accountDetails):
+    global client
+    f = Fernet(clientKey)
+    accountDetails.append('create')
+    accountDetails = f.encrypt(bytes(repr(accountDetails).encode()))
+    client.sendall(accountDetails)
+    creationOutcome = recvall(client)
+    creationOutcome = f.decrypt(creationOutcome)
+    creationOutcome = literal_eval(creationOutcome.decode())
+    return creationOutcome

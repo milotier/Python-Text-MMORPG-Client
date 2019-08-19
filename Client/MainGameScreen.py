@@ -23,35 +23,52 @@ from prompt_toolkit.output.base import *
 
 
 # This defines the different objects that together will form vertical and horizontal splits
-commandInputArea = TextArea(height=1, prompt=' >', style='class:input-field', multiline=False,wrap_lines=False, history=FileHistory('history.txt'))
-horizontalLine = Window(height=1, char='-', style='class:line')
-verticalLineTop = Window(width=1, height=3, char='|', style='class:line')
-verticalLine = Window(width=1, char='|', style='class:line')
+commandInputArea = TextArea(height=1, prompt='>', style='class:input-field', multiline=False, wrap_lines=False, history=FileHistory('history.txt'))
+horizontalLine = Window(height=1, char='─', style='class:line')
+verticalLineTop = Window(width=1, height=1, char='│', style='class:line')
+verticalLine = Window(width=1, char='│', style='class:line')
+verticalLine20 = Window(width=1, height=20, char='│', style='class:line')
 sideLine = Window(width=1, style='class:line')
 outputArea1 = TextArea(style='class:output-field', height=20)
 outputArea2 = TextArea(style='class:output-field', height=20)
 outputArea3 = TextArea(style='class:output-field')
 outputArea4 = TextArea(style='class:output-field')
-locationArea = TextArea(style='class:output-field', height=2)
-playerInfoArea = TextArea(style='class:output-field', height=2)
+locationArea = TextArea(style='class:output-field', height=1)
+playerInfoArea = TextArea(style='class:output-field', height=1)
 descriptionArea = TextArea(style='class:output-field', height=2)
-corner = TextArea(multiline=False , height=1, width=1, text='+', read_only=True)
+topLeftCorner = Window(height=1, width=1, char='┌', style='class:line')
+topRightCorner = Window(height=1, width=1, char='┐', style='class:line')
+bottomLeftCorner = Window(height=1, width=1, char='└', style='class:line')
+bottomRightCorner = Window(height=1, width=1, char='┘', style='class:line')
+topMidCorner = Window(height=1, width=1, char='┬', style='class:line')
+bottomMidCorner = Window(height=1, width=1, char='┴', style='class:line')
+leftSideCorner = Window(height=1, width=1, char='├', style='class:line')
+rightSideCorner = Window(height=1, width=1, char='┤', style='class:line')
+midCorner = Window(height=1, width=1, char='┼', style='class:line')
 
 # This defines the different splits that together will form the layout of the application
 outputAreas1And2 = HSplit([outputArea1, horizontalLine, outputArea3])
 outputAreas3And4 = HSplit([outputArea2, horizontalLine, outputArea4])
-horizontalDoubleCornerLine = VSplit([corner, horizontalLine, corner])
-mainTextSplit = VSplit([verticalLine, outputAreas1And2, verticalLine, outputAreas3And4, verticalLine])
+commandInputLineTop = VSplit([leftSideCorner, horizontalLine, bottomMidCorner, horizontalLine, rightSideCorner])
+leftVerticalLine = HSplit([verticalLine20, leftSideCorner, verticalLine])
+midVerticalLine = HSplit([verticalLine20, midCorner, verticalLine])
+rightVerticalLine = HSplit([verticalLine20, rightSideCorner, verticalLine])
+mainTextSplit = VSplit([leftVerticalLine, outputAreas1And2, midVerticalLine, outputAreas3And4, rightVerticalLine])
 commandInputSplit = VSplit([verticalLine, commandInputArea, verticalLine])
-sideSplit = VSplit([corner, horizontalLine, corner])
-topSplit = VSplit([verticalLineTop, locationArea, verticalLineTop, playerInfoArea, verticalLineTop, descriptionArea, verticalLineTop])
-mainContainer = HSplit([sideSplit, topSplit, horizontalDoubleCornerLine, mainTextSplit, horizontalDoubleCornerLine, commandInputSplit, sideSplit])
+topLineSplit = VSplit([topLeftCorner, horizontalLine, topMidCorner, horizontalLine, topRightCorner])
+topBottomLineMid = VSplit([bottomMidCorner, horizontalLine, topMidCorner, horizontalLine, bottomMidCorner])
+topBottomLineSplit = VSplit([leftSideCorner, horizontalLine, midCorner, horizontalLine, rightSideCorner])
+bottomLineSplit = VSplit([bottomLeftCorner, horizontalLine, bottomRightCorner])
+topSplit = VSplit([verticalLineTop, locationArea, verticalLineTop, playerInfoArea, verticalLineTop])
+mainContainer = HSplit([topLineSplit, topSplit, topBottomLineSplit, mainTextSplit, commandInputLineTop, commandInputSplit, bottomLineSplit])
 
 
 # This is ran everytime the user inputs a command via the commandInputArea object
 def commandAcceptHandler(buff):
     if not commandInputArea.text.isspace() == True and commandInputArea.text != '' and not len(commandInputArea.text) > 50:
-            CommandController.checkGivenCommand(commandInputArea.text)
+        command = '>' + commandInputArea.text
+        GameState.screenUpdateQueue.put({'update': {'commandOutput': command}})
+        CommandController.checkGivenCommand(commandInputArea.text)
 
 # This binds the accept handler to the input area
 commandInputArea.accept_handler = commandAcceptHandler
@@ -68,8 +85,8 @@ def exit_(event):
 # This defines the style of the application
 style = Style([
             ('output-field', 'bg:#000000 #ffffff'),
-            ('input-field', 'bg:#000000 #ffffff'),
-            ('line',        '#ffffff'),
+            ('input-field',  'bg:#000000 #ffffff'),
+            ('line',         'bg:#000000 #ffffff'),
               ])
 
 # Here the Application object is defined
@@ -131,7 +148,7 @@ def updateScreen():
         outputArea4.buffer.document = Document(text=GameState.inventoryWindowText, cursor_position=len(GameState.inventoryWindowText))
  
     if 'name' in GameState.playerLocation:
-        locationText = '\n ' + GameState.playerLocation['name']
+        locationText = GameState.playerLocation['name']
         locationArea.buffer.document = Document(text=locationText)
     
     

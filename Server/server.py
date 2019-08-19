@@ -29,29 +29,49 @@ class ClientHandler(LineReceiver):
         self.location = [0, 0, 5]
         self.setRawMode()
         self.key = Fernet.generate_key()
-        self.isLoggedIn = True
+        self.isLoggedIn = False
+        self.loggedInAccount = None
     
     def connectionMade(self):
-        print(self)
-        area = Database.getPlayerLocation(self, env, staticWorldDB)
-        update = {}
-        update['update'] = {'fields': area}
-        message = [update, self.key]
-        self.transport.write(bytes(repr(message).encode()))
+        self.transport.write(self.key)
         self.users.append({'ClientHandler': self})
     
     def rawDataReceived(self, command):
+        f = Fernet(self.key)
+        command = f.decrypt(command).decode()
+        command = literal_eval(command)
         if self.isLoggedIn == True:
             global commandQueue
-            f = Fernet(self.key)
-            command = f.decrypt(command)
             CommandHandler.commandQueue.put({'command': command, 'ClientHandler': self})
         else:
-            pass
+            if type(command) == list:
+                if not 'create' in command:
+                    self.isLoggedIn = True
+                    area = Database.getPlayerLocation(self, env, staticWorldDB)
+                    update = {}
+                    update['update'] = {'fields': area}
+                    self.sendData(update)
+                    message = [update, self.key]
+                else:
+                    passwordIsStrongEnough = Database.checkPasswordStrength(command[1])
+                    usernameAlreadyExists = Database.checkUsername(command[0], env, accountDB)
+                    if passwordIsStrongEnough == True and usernameAlreadyExists == False:
+                        accountID = Database.createAccount(command[0], command[1], env, accountDB)
+                        self.isLoggedIn = True
+                        self.loggedInAccount = accountID
+                        area = Database.getPlayerLocation(self, env, staticWorldDB)
+                        update = {}
+                        update['update'] = {'fields': area}
+                        self.sendData(update)
+                    else:
+                        if passwordIsStrongEnough == False:
+                            self.sendData('password too weak')
+                        elif usernameAlreadyExists == True:
+                            self.sendData('username already exists')
 
     def connectionLost(self, reason):
-        print(reason.type)
         print('Connection lost.')
+        self.transport.abortConnection()
     
     def sendData(self, data):
         f = Fernet(self.key)
@@ -70,11 +90,13 @@ class Server(Factory):
 server = Server()
 
 # This starts up the lmdb environment
-#env, staticWorldDB = Database.startupDatabase()
 global env
 global staticWorldDB
+global accountDB
 env = lmdb.open('GameDatabase', map_size = 1000000, max_dbs=20)
 staticWorldDB = env.open_db(bytes('StaticWorld'.encode()))
+accountDB = env.open_db(bytes('Accounts'.encode()))
+characterDB = env.open_db(bytes('Characters'.encode()))
 
 # This makes threads that will perform the commands
 commandPerformingThread1 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, reactor))

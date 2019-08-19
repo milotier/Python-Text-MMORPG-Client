@@ -26,10 +26,13 @@ staticWorld = {pack('III', 0, 0, 5): {'name': 'Test field 00',
 
 env = lmdb.open('GameDatabase', map_size=1000000, max_dbs=20)
 staticWorldDB = env.open_db(bytes('StaticWorld'.encode()))
-txn = env.begin(write=True)
+txn = env.begin(write=True, db=staticWorldDB)
 for field in staticWorld:
-    txn.put(field, bytes(repr(staticWorld[field]).encode()), db=staticWorldDB)
+    txn.put(field, bytes(repr(staticWorld[field]).encode()))
 txn.commit()
+
+accountsDB = env.open_db(bytes('Accounts'.encode()))
+charactersDB = env.open_db(bytes('Characters'.encode()))
 
 txn = env.begin(write=True)
 for field in staticWorld:

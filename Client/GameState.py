@@ -10,13 +10,13 @@ global outputArea2Function
 global outputArea3Function
 global outputArea4Function
 outputArea1Function = 'inventoryWindow'
-outputArea2Function = 'skillWindowText'
+outputArea2Function = 'skillWindow'
 outputArea3Function = 'commandOutputWindow'
 outputArea4Function = 'chatWindow'
-inventoryWindowText = 'test'
-skillWindowText = 'teste'
-commandOutputWindowText = 'testeee'
-chatWindowText = 'testeeeeee'
+inventoryWindowText = ''
+skillWindowText = ''
+commandOutputWindowText = ''
+chatWindowText = ''
 
 global area
 area = {}
@@ -89,6 +89,8 @@ def updateState(updates, app):
             if 'fields' in updates['update']:
                 area = updates['update']['fields']
                 playerLocation = area['center']
+            if 'commandOutput' in updates['update']:
+                commandOutputWindowText += updates['update']['commandOutput'] + '\n'
     
     outputArea4Function = 'chatWindow'
-    chatWindowText = repr(area)
+    #chatWindowText = repr(area)
