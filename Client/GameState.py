@@ -9,6 +9,7 @@ global outputArea1Function
 global outputArea2Function
 global outputArea3Function
 global outputArea4Function
+# TODO: Add more functions the output windows can have
 outputArea1Function = 'inventoryWindow'
 outputArea2Function = 'skillWindow'
 outputArea3Function = 'commandOutputWindow'

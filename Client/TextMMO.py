@@ -41,6 +41,7 @@ def startGame():
     print('\n\nYou have been disconnected from the server.\n\n')
 
 # This is ran at the start of the application which tries to connect to the server
+# TODO: Replace this with a login window
 def login(iteration):
     if iteration == 'first':
         connectionOutcome = ServerConnect.connectToServer(host, port)
@@ -56,7 +57,9 @@ def login(iteration):
                 print('\nLogin to your account:\n\n')
                 username = input('Please enter your username: ')
                 password = getpass('Please enter your password: ')
-                ServerConnect.loginToAccount([username, password])
+                loginOutcome = ServerConnect.loginToAccount([username, password])
+                if type(loginOutcome) == dict:
+                    GameState.screenUpdateQueue.put(loginOutcome)
                 validAnswer = True
             elif hasAccount == 'no' or hasAccount == 'n':
                 print('\nMake a new account:\n\n')

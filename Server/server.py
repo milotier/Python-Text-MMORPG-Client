@@ -26,7 +26,6 @@ class ClientHandler(LineReceiver):
 
     def __init__(self, users):
         self.users = users
-        self.location = [0, 0, 5]
         self.setRawMode()
         self.key = Fernet.generate_key()
         self.isLoggedIn = False
@@ -46,20 +45,28 @@ class ClientHandler(LineReceiver):
         else:
             if type(command) == list:
                 if not 'create' in command:
-                    self.isLoggedIn = True
-                    area = Database.getPlayerLocation(self, env, staticWorldDB)
-                    update = {}
-                    update['update'] = {'fields': area}
-                    self.sendData(update)
-                    message = [update, self.key]
+                    detailsMatch = Database.checkAccountDetails(self, command[0], command[1], env, loginDB)
+                    if type(detailsMatch) == int:
+                        self.isLoggedIn = True
+                        self.loggedInAccount = detailsMatch
+                        area = Database.getPlayerArea(self, env, staticWorldDB, characterDB)
+                        update = {}
+                        update['update'] = {'fields': area}
+                        self.sendData(update)
+                    # TODO: Send message to client if account details don't match
+                    else:
+                        pass
+
                 else:
                     passwordIsStrongEnough = Database.checkPasswordStrength(command[1])
-                    usernameAlreadyExists = Database.checkUsername(command[0], env, accountDB)
+                    usernameAlreadyExists = Database.checkUsername(command[0], env, loginDB)
+                    print(passwordIsStrongEnough)
+                    print(usernameAlreadyExists)
                     if passwordIsStrongEnough == True and usernameAlreadyExists == False:
-                        accountID = Database.createAccount(command[0], command[1], env, accountDB)
+                        accountID = Database.createAccount(command[0], command[1], env, loginDB, characterDB, accountDB)
                         self.isLoggedIn = True
                         self.loggedInAccount = accountID
-                        area = Database.getPlayerLocation(self, env, staticWorldDB)
+                        area = Database.getPlayerArea(self, env, staticWorldDB, characterDB)
                         update = {}
                         update['update'] = {'fields': area}
                         self.sendData(update)
@@ -73,6 +80,7 @@ class ClientHandler(LineReceiver):
         print('Connection lost.')
         self.transport.abortConnection()
     
+    # TODO: Add current time to message
     def sendData(self, data):
         f = Fernet(self.key)
         data = f.encrypt(bytes(repr(data).encode()))
@@ -92,23 +100,24 @@ server = Server()
 # This starts up the lmdb environment
 global env
 global staticWorldDB
-global accountDB
+global loginDB
 env = lmdb.open('GameDatabase', map_size = 1000000, max_dbs=20)
 staticWorldDB = env.open_db(bytes('StaticWorld'.encode()))
+loginDB = env.open_db(bytes('Login'.encode()))
 accountDB = env.open_db(bytes('Accounts'.encode()))
 characterDB = env.open_db(bytes('Characters'.encode()))
 
 # This makes threads that will perform the commands
-commandPerformingThread1 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, reactor))
+commandPerformingThread1 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, characterDB, reactor))
 commandPerformingThread1.daemon = True
 commandPerformingThread1.start()
-commandPerformingThread2 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, reactor))
+commandPerformingThread2 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, characterDB, reactor))
 commandPerformingThread2.daemon = True
 commandPerformingThread2.start()
-commandPerformingThread3 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, reactor))
+commandPerformingThread3 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, characterDB, reactor))
 commandPerformingThread3.daemon = True
 commandPerformingThread3.start()
-commandPerformingThread4 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, reactor))
+commandPerformingThread4 = Thread(target=CommandHandler.performCommands, args=(env, staticWorldDB, characterDB, reactor))
 commandPerformingThread4.daemon = True
 commandPerformingThread4.start()
 

@@ -31,8 +31,9 @@ for field in staticWorld:
     txn.put(field, bytes(repr(staticWorld[field]).encode()))
 txn.commit()
 
-accountsDB = env.open_db(bytes('Accounts'.encode()))
+loginDB = env.open_db(bytes('Login'.encode()))
 charactersDB = env.open_db(bytes('Characters'.encode()))
+env.open_db(bytes('Accounts'.encode()))
 
 txn = env.begin(write=True)
 for field in staticWorld:

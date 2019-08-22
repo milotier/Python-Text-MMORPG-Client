@@ -34,7 +34,6 @@ class Command:
             commentFactorNum += 1
         self.commentFactor = commentFactor / commentFactorNum
 
-
 class TravelCommand(Command):
     def __init__(self, inputVerb, verbCommentFactor, direction, inputDirection, directionCommentFactor):
         super().__init__(verbCommentFactor, inputVerb, [directionCommentFactor])
@@ -49,7 +48,7 @@ def makeCommand(command):
 
 
 # Function that will repeatedly perform commands received from the clients and send updates to these clients
-def performCommands(env, staticWorldDB, reactor):
+def performCommands(env, staticWorldDB, characterDB, reactor):
     global commandQueue
     global updateList
     mode = 1
@@ -67,9 +66,8 @@ def performCommands(env, staticWorldDB, reactor):
                     command['command'] = makeCommand(command['command'])
 
                 if type(command['command']) == TravelCommand:
-                    outcome = movePlayer(command['ClientHandler'], command['command'].direction.direction, env, staticWorldDB)
+                    outcome = movePlayer(command['ClientHandler'], command['command'].direction.direction, env, staticWorldDB, characterDB)
                     if type(outcome) == dict:
-                        print(command['ClientHandler'].location)
                         updateList.append({'ClientHandler': command['ClientHandler'], 'updates': {'update': {'fields': outcome}}})
 
                     elif outcome == 'destination invalid':

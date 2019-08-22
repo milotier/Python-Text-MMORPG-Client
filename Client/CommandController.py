@@ -8,6 +8,7 @@ import time
 # Module which handles the commands that the user inputs
 
 # These are the different classes which make up the different commands
+# TODO: Add more commands
 class Direction:
     def __init__(self, direction, inputDirection, directionCommentFactor):
         self.direction = direction

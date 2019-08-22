@@ -56,6 +56,7 @@ def getUpdatesFromServer(updateQueue):
             updateQueue.put(literal_eval(data.decode()))
     
 # This sends the commands inputted by the user to the server
+# TODO: Add timestamps of last received update from server to command
 def sendCommandToServer(sendingCommand):
     global client
     commandType = str(type(sendingCommand).__name__)
@@ -70,6 +71,11 @@ def loginToAccount(accountDetails):
     f = Fernet(clientKey)
     accountDetails = f.encrypt(bytes(repr(accountDetails).encode()))
     client.sendall(accountDetails)
+    client.sendall(accountDetails)
+    loginOutcome = recvall(client)
+    loginOutcome = f.decrypt(loginOutcome)
+    loginOutcome = literal_eval(loginOutcome.decode())
+    return loginOutcome
 
 def createAccount(accountDetails):
     global client
