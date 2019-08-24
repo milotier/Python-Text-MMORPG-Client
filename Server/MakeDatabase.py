@@ -1,27 +1,27 @@
 import lmdb
-from time import sleep
 from ast import literal_eval
-from struct import *
+from struct import pack
 
-staticWorld = {pack('III', 0, 0, 5): {'name': 'Test field 00',
-                                  'description': 'This is a test description.'},
-               pack('III', 0, 1, 5): {'name': 'Test field 01',
-                                  'description': 'This is also a test description.'},
-               pack('III', 0, 2, 5): {'name': 'Test field 02',
-                                  'description': 'This is a test description.'},
-               pack('III', 1, 0, 5): {'name': 'Test field 10',
-                                  'description': 'This is also a test description.'},
-               pack('III', 1, 1, 5): {'name': 'Test field 11',
-                                  'description': 'This is a test description.'},
-               pack('III', 1, 2, 5): {'name': 'Test field 12',
-                                  'description': 'This is also a test description.'},
-               pack('III', 2, 0, 5): {'name': 'Test field 20',
-                                  'description': 'This is a test description.'},
-               pack('III', 2, 1, 5): {'name': 'Test field 21',
-                                  'description': 'This is also a test description.'},
-               pack('III', 2, 2, 5): {'name': 'Test field 22',
-                                  'description': 'This is a test description.'}   
-              }
+staticWorld = {
+    pack('III', 0, 0, 5): {'name': 'Test field 00',
+                           'description': 'This is a test description.'},
+    pack('III', 0, 1, 5): {'name': 'Test field 01',
+                           'description': 'This is also a test description.'},
+    pack('III', 0, 2, 5): {'name': 'Test field 02',
+                           'description': 'This is a test description.'},
+    pack('III', 1, 0, 5): {'name': 'Test field 10',
+                           'description': 'This is also a test description.'},
+    pack('III', 1, 1, 5): {'name': 'Test field 11',
+                           'description': 'This is a test description.'},
+    pack('III', 1, 2, 5): {'name': 'Test field 12',
+                           'description': 'This is also a test description.'},
+    pack('III', 2, 0, 5): {'name': 'Test field 20',
+                           'description': 'This is a test description.'},
+    pack('III', 2, 1, 5): {'name': 'Test field 21',
+                           'description': 'This is also a test description.'},
+    pack('III', 2, 2, 5): {'name': 'Test field 22',
+                           'description': 'This is a test description.'}
+}
 
 
 env = lmdb.open('GameDatabase', map_size=1000000, max_dbs=20)

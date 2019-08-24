@@ -1,6 +1,6 @@
-from socket import *
+from socket import socket, AF_INET, SOCK_STREAM
 from ast import literal_eval
-from json import *
+from json import dumps
 from cryptography.fernet import Fernet
 
 # Module which handles the connection with the server
@@ -10,8 +10,9 @@ from cryptography.fernet import Fernet
 global client
 client = socket(AF_INET, SOCK_STREAM)
 
-global clientKey 
+global clientKey
 clientKey = ''
+
 
 def recvall(sock):
     global clientKey
@@ -23,6 +24,7 @@ def recvall(sock):
         if len(packet) < bufsize:
             break
     return data
+
 
 # This tries to make a connection to the server
 def connectToServer(host, port):
@@ -39,8 +41,9 @@ def connectToServer(host, port):
         else:
             return 'connection failed'
 
-    except:
+    except ConnectionRefusedError:
         return 'connection failed'
+
 
 # This waits for updates from the server
 def getUpdatesFromServer(updateQueue):
@@ -54,17 +57,21 @@ def getUpdatesFromServer(updateQueue):
         data = f.decrypt(data)
         if type(literal_eval(data.decode())) == dict:
             updateQueue.put(literal_eval(data.decode()))
-    
+
+
 # This sends the commands inputted by the user to the server
 # TODO: Add timestamps of last received update from server to command
 def sendCommandToServer(sendingCommand):
     global client
     commandType = str(type(sendingCommand).__name__)
     command = {commandType: sendingCommand}
-    sendingCommand = bytes(dumps(command, default=lambda o: o.__dict__, sort_keys=True).encode())
+    sendingCommand = bytes(dumps(command,
+                           default=lambda o: o.__dict__,
+                           sort_keys=True).encode())
     f = Fernet(clientKey)
     sendingCommand = f.encrypt(bytes(repr(sendingCommand).encode()))
     client.sendall(sendingCommand)
+
 
 def loginToAccount(accountDetails):
     global client
@@ -76,6 +83,7 @@ def loginToAccount(accountDetails):
     loginOutcome = f.decrypt(loginOutcome)
     loginOutcome = literal_eval(loginOutcome.decode())
     return loginOutcome
+
 
 def createAccount(accountDetails):
     global client

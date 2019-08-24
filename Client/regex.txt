@@ -1,0 +1,37 @@
+[
+        (r'go',          True,          {'type': 'verb', 'verbType': 'travel', 'commentFactor': 1, 'input': 'go'}),
+        (r'travel',      True,          {'type': 'verb', 'verbType': 'travel', 'commentFactor': 1, 'input': 'travel'}),
+        (r'locomote',    True,          {'type': 'verb', 'verbType': 'travel', 'commentFactor': 2, 'input': 'locomote'}),
+        (r'journey',     True,          {'type': 'verb', 'verbType': 'travel', 'commentFactor': 2, 'input': 'journey'}),
+        (r'move',        True,          {'type': 'verb', 'verbType': 'travel', 'commentFactor': 1, 'input': 'move'}),
+        (r'slither',     True,          {'type': 'verb', 'verbType': 'travel', 'commentFactor': 2, 'input': 'slither'}),
+                                                                                                                          
+        (r'take',        True,          {'type': 'verb', 'verbType': 'take', 'commentFactor': 1, 'input': 'take'}),
+        (r'confiscate',  True,          {'type': 'verb', 'verbType': 'take', 'commentFactor': 2, 'input': 'confiscate'}),
+        (r'seize',       True,          {'type': 'verb', 'verbType': 'take', 'commentFactor': 1, 'input': 'seize'}),
+        (r'pick',        True,          {'type': 'verb', 'verbType': 'pick', 'commentFactor': 1, 'input': 'pick'}),
+
+        (r'up',          True,          {'type': 'keyword', 'keyword': 'up', 'commentFactor': 1, 'input': 'up'}),
+
+        (r'north',       True,          {'type': 'direction', 'direction': 'north', 'commentFactor': 1, 'input': 'north'}),
+        (r'n',           True,          {'type': 'direction', 'direction': 'north', 'commentFactor': 0, 'input': 'n'}),
+        (r'south',       True,          {'type': 'direction', 'direction': 'south', 'commentFactor': 1, 'input': 'south'}),
+        (r's',           True,          {'type': 'direction', 'direction': 'south', 'commentFactor': 0, 'input': 's'}),
+        (r'east',        True,          {'type': 'direction', 'direction': 'east', 'commentFactor': 1, 'input': 'east'}),
+        (r'e',           True,          {'type': 'direction', 'direction': 'east', 'commentFactor': 0, 'input': 'e'}),
+        (r'west',        True,          {'type': 'direction', 'direction': 'west', 'commentFactor': 1, 'input': 'west'}),
+        (r'w',           True,          {'type': 'direction', 'direction': 'west', 'commentFactor': 0, 'input': 'w'}),
+        (r'northeast',   True,          {'type': 'direction', 'direction': 'north-east', 'commentFactor': 1, 'input': 'northeast'}),
+        (r'north-east',  True,          {'type': 'direction', 'direction': 'north-east', 'commentFactor': 2, 'input': 'north-east'}),
+        (r'ne',          True,          {'type': 'direction', 'direction': 'north-east', 'commentFactor': 0, 'input': 'ne'}),
+        (r'northwest',   True,          {'type': 'direction', 'direction': 'north-west', 'commentFactor': 1, 'input': 'northwest'}),
+        (r'north-west',  True,          {'type': 'direction', 'direction': 'north-west', 'commentFactor': 2, 'input': 'north-west'}),
+        (r'nw',          True,          {'type': 'direction', 'direction': 'north-west', 'commentFactor': 0, 'input': 'nw'}),
+        (r'southeast',   True,          {'type': 'direction', 'direction': 'south-east', 'commentFactor': 1, 'input': 'southeast'}),
+        (r'south-east',  True,          {'type': 'direction', 'direction': 'south-east', 'commentFactor': 2, 'input': 'south-east'}),
+        (r'se',          True,          {'type': 'direction', 'direction': 'south-east', 'commentFactor': 0, 'input': 'se'}),
+        (r'southwest',   True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 1, 'input': 'southwest'}),
+        (r'south-west',  True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 2, 'input': 'north-west'}),
+        (r'sw',          True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 0, 'input': 'sw'}),
+        (r'[A-Za-z][A-Za-z0-9_]*', False, {'type': 'name'})
+]

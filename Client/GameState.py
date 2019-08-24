@@ -1,6 +1,12 @@
-from queue import *
+from queue import Queue
+from time import sleep
 
-# This defines the function of every of the four major output windows and the text they should contain
+# The module which saves the game state and updates it
+# TODO: Save more types of data in the GameState module:
+# Player status, inventory, amount of players in current area, etc
+
+# This defines the function of every of the four major output windows
+# and the text they should contain
 global playerInfoWindowText
 global commandOutputWindowText
 global inventoryWindowText
@@ -9,6 +15,7 @@ global outputArea1Function
 global outputArea2Function
 global outputArea3Function
 global outputArea4Function
+
 # TODO: Add more functions the output windows can have
 outputArea1Function = 'inventoryWindow'
 outputArea2Function = 'skillWindow'
@@ -24,8 +31,10 @@ area = {}
 global playerLocation
 playerLocation = {}
 
-# This defines the queue object that will order the different updates of the screen as FIFO (FirstInFirstOut)
+# This defines the queue object
+# that will order the different updates of the screen as FIFO (FirstInFirstOut)
 screenUpdateQueue = Queue()
+
 
 # This updates the game state
 def updateState(updates, app):
@@ -40,12 +49,10 @@ def updateState(updates, app):
     global area
     global playerLocation
     if updates == 'server went down':
-        try:
-            app.exit()
-            sleep(0.5)
-            print('\n\nThe server is down at the moment. Please wait and come back later.\n\n')
-        except:
-            pass
+        app.exit()
+        sleep(0.5)
+        print('\n\nThe server is down at the moment.', end=' ')
+        print('Please wait and come back later.\n\n')
 
     if type(updates) == list:
         for change in updates:
@@ -91,7 +98,8 @@ def updateState(updates, app):
                 area = updates['update']['fields']
                 playerLocation = area['center']
             if 'commandOutput' in updates['update']:
-                commandOutputWindowText += updates['update']['commandOutput'] + '\n'
-    
+                commandOutputWindowText += updates['update']['commandOutput']
+                commandOutputWindowText += '\n'
+
     outputArea4Function = 'chatWindow'
-    #chatWindowText = repr(area)
+    # chatWindowText = repr(area)

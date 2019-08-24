@@ -1,13 +1,10 @@
 from time import sleep
-from Database import *
-from queue import *
-from twisted.protocols.basic import LineReceiver
-from twisted.internet.protocol import Factory, Protocol
-from json import *
-from collections import namedtuple
-from jsonpickle import *
+from Database import movePlayer
+from queue import Queue
+from json import loads
 
-# Here a FIFO queue is made that makes sure that a command is only performed once
+# Here a FIFO queue is made
+# that makes sure that a command is only performed once
 global commandQueue
 commandQueue = Queue()
 
@@ -15,12 +12,14 @@ commandQueue = Queue()
 global updateList
 updateList = []
 
+
 # These are the different classes which make up the different commands
 class Direction:
     def __init__(self, direction, inputDirection, directionCommentFactor):
         self.direction = direction
         self.inputDirection = inputDirection
         self.directionCommentFactor = directionCommentFactor
+
 
 class Command:
     def __init__(self, verbCommentFactor, inputVerb, commentFactorList):
@@ -34,20 +33,38 @@ class Command:
             commentFactorNum += 1
         self.commentFactor = commentFactor / commentFactorNum
 
-class TravelCommand(Command):
-    def __init__(self, inputVerb, verbCommentFactor, direction, inputDirection, directionCommentFactor):
-        super().__init__(verbCommentFactor, inputVerb, [directionCommentFactor])
-        self.direction = Direction(direction, inputDirection, directionCommentFactor)
 
-# This will make a command object based on what type of command the server has received
+class TravelCommand(Command):
+    def __init__(self,
+                 inputVerb,
+                 verbCommentFactor,
+                 direction,
+                 inputDirection,
+                 directionCommentFactor):
+        super().__init__(verbCommentFactor,
+                         inputVerb,
+                         [directionCommentFactor])
+        self.direction = Direction(direction,
+                                   inputDirection,
+                                   directionCommentFactor)
+
+
+# This will make a command object
+# based on what type of command the server has received
 def makeCommand(command):
     if 'TravelCommand' in command:
         command = command['TravelCommand']
-        travelCommand = TravelCommand(command['inputVerb'], command['verbCommentFactor'], command['direction']['direction'], command['direction']['inputDirection'], command['direction']['directionCommentFactor'])
+        travelCommand = TravelCommand(
+            command['inputVerb'],
+            command['verbCommentFactor'],
+            command['direction']['direction'],
+            command['direction']['inputDirection'],
+            command['direction']['directionCommentFactor'])
         return travelCommand
 
 
-# Function that will repeatedly perform commands received from the clients and send updates to these clients
+# Function that will repeatedly perform commands received from the clients
+# and send updates to these clients
 def performCommands(env, staticWorldDB, characterDB, reactor):
     global commandQueue
     global updateList
@@ -55,7 +72,7 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
     while True:
         while mode == 1:
             sleep(0.05)
-            while commandQueue.empty() == False:
+            while not commandQueue.empty():
                 command = commandQueue.get()
                 command['command'] = loads(command['command'])
                 if 'str' in command['command']:
@@ -66,9 +83,16 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
                     command['command'] = makeCommand(command['command'])
 
                 if type(command['command']) == TravelCommand:
-                    outcome = movePlayer(command['ClientHandler'], command['command'].direction.direction, env, staticWorldDB, characterDB)
+                    outcome = movePlayer(
+                        command['ClientHandler'],
+                        command['command'].direction.direction,
+                        env,
+                        staticWorldDB,
+                        characterDB)
                     if type(outcome) == dict:
-                        updateList.append({'ClientHandler': command['ClientHandler'], 'updates': {'update': {'fields': outcome}}})
+                        updateList.append({
+                            'ClientHandler': command['ClientHandler'],
+                            'updates': {'update': {'fields': outcome}}})
 
                     elif outcome == 'destination invalid':
                         print('destination invalid')
@@ -78,6 +102,7 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
         while mode == 2:
             while len(updateList) > 0:
                 update = updateList.pop(0)
-                reactor.callFromThread(update['ClientHandler'].sendData, update['updates'])
+                reactor.callFromThread(update['ClientHandler'].sendData,
+                                       update['updates'])
                 print('Update sent.')
             mode = 1
