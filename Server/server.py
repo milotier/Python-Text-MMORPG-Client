@@ -7,6 +7,7 @@ from twisted.internet import reactor
 import lmdb
 from ast import literal_eval
 from cryptography.fernet import Fernet
+from time import time
 
 # The server module (needless to say)
 
@@ -27,6 +28,7 @@ class ClientHandler(LineReceiver):
         self.key = Fernet.generate_key()
         self.isLoggedIn = False
         self.loggedInAccount = None
+        self.lastSentUpdate = 0.0
 
     def connectionMade(self):
         self.transport.write(self.key)
@@ -51,23 +53,19 @@ class ClientHandler(LineReceiver):
                     if type(detailsMatch) == int:
                         self.isLoggedIn = True
                         self.loggedInAccount = detailsMatch
-                        area = Database.getPlayerArea(self,
-                                                      env,
-                                                      staticWorldDB,
-                                                      characterDB)
-                        update = {}
-                        update['update'] = {'fields': area}
-                        self.sendData(update)
+                        update = Database.getCompleteUpdate(self,
+                                                            env,
+                                                            staticWorldDB,
+                                                            characterDB)
+                        self.sendData(update, 'update')
                     else:
-                        self.sendData('no match found')
+                        self.sendData('no match found', 'message')
 
                 else:
                     passwordIsStrongEnough = Database.checkPasswordStrength(command[1])
                     usernameAlreadyExists = Database.checkUsername(command[0],
                                                                    env,
                                                                    loginDB)
-                    print(passwordIsStrongEnough)
-                    print(usernameAlreadyExists)
                     if passwordIsStrongEnough and not usernameAlreadyExists:
                         accountID = Database.createAccount(command[0],
                                                            command[1],
@@ -77,26 +75,27 @@ class ClientHandler(LineReceiver):
                                                            accountDB)
                         self.isLoggedIn = True
                         self.loggedInAccount = accountID
-                        area = Database.getPlayerArea(self,
-                                                      env,
-                                                      staticWorldDB,
-                                                      characterDB)
-                        update = {}
-                        update['update'] = {'fields': area}
-                        self.sendData(update)
+                        update = Database.getCompleteUpdate(self,
+                                                            env,
+                                                            staticWorldDB,
+                                                            characterDB)
+                        self.sendData(update, 'update')
                     else:
                         if not passwordIsStrongEnough:
-                            self.sendData('password too weak')
+                            self.sendData('password too weak', 'message')
                         elif usernameAlreadyExists:
-                            self.sendData('username already exists')
+                            self.sendData('username already exists', 'message')
 
     def connectionLost(self, reason):
         print('Connection lost.')
         self.transport.abortConnection()
 
     # TODO: Add timestamp to updates sent by server
-    def sendData(self, data):
+    def sendData(self, data, dataType):
         f = Fernet(self.key)
+        if dataType == 'update':
+            timestamp = time()
+            self.lastSentUpdate = timestamp
         data = f.encrypt(bytes(repr(data).encode()))
         self.transport.write(data)
 
@@ -112,6 +111,7 @@ class Server(Factory):
 
 
 server = Server()
+
 
 # This starts up the lmdb environment
 global env
@@ -131,6 +131,7 @@ commandPerformingThread1 = Thread(target=CommandHandler.performCommands,
                                         reactor))
 commandPerformingThread1.daemon = True
 commandPerformingThread1.start()
+
 commandPerformingThread2 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
@@ -138,6 +139,7 @@ commandPerformingThread2 = Thread(target=CommandHandler.performCommands,
                                         reactor))
 commandPerformingThread2.daemon = True
 commandPerformingThread2.start()
+
 commandPerformingThread3 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
@@ -145,6 +147,7 @@ commandPerformingThread3 = Thread(target=CommandHandler.performCommands,
                                         reactor))
 commandPerformingThread3.daemon = True
 commandPerformingThread3.start()
+
 commandPerformingThread4 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,

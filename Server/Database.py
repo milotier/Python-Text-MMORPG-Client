@@ -9,6 +9,7 @@ from passlib.hash import bcrypt
 # TODO: Split database module up into multiple smaller ones?
 # TODO: Make a difference between usernames and characternames
 # TODO: Add some sort of character description
+# TODO: Add an item system
 
 
 # This starts up the lmdb environment and the databases in it
@@ -39,9 +40,7 @@ def checkPasswordStrength(password):
 def checkUsername(username, env, loginDB):
     txn = env.begin(db=loginDB, write=True)
     cursor = txn.cursor(db=loginDB)
-    print(username)
     username = cursor.get(bytes(username.encode()))
-    print(username)
     if username is None:
         usernameExists = False
     else:
@@ -50,7 +49,6 @@ def checkUsername(username, env, loginDB):
 
 
 def createAccount(username, password, env, loginDB, characterDB, accountDB):
-    print(password)
     hashedPassword = bcrypt.hash(password)
     txn = env.begin(db=accountDB, write=True)
     cursor = txn.cursor(db=accountDB)
@@ -63,10 +61,8 @@ def createAccount(username, password, env, loginDB, characterDB, accountDB):
         else:
             currentID += 1
 
-    print(accountID)
-    accountID = pack('I', accountID)
     account = bytes(repr({'username': username, 'status': 'Owner'}).encode())
-    cursor.put(accountID, account)
+    cursor.put(pack('I', accountID), account)
     cursor.close()
     txn.commit()
     txn = env.begin(db=loginDB, write=True)
@@ -80,9 +76,8 @@ def createAccount(username, password, env, loginDB, characterDB, accountDB):
     txn = env.begin(db=characterDB, write=True)
     cursor = txn.cursor(db=characterDB)
     character = {'location': [1, 1, 5]}
-    accountID = pack('I', accountID)
     character = bytes(repr(character).encode())
-    cursor.put(accountID, character)
+    cursor.put(pack('I', accountID), character)
     cursor.close()
     txn.commit()
     return accountID
@@ -133,17 +128,8 @@ def getPlayerArea(clientHandler, env, staticWorldDB, characterDB):
             except error:
                 isValidField = False
             if isValidField:
-                fieldKey = ''
-                if yCoord == playerLocation[1] + 1:
-                    fieldKey += 'north '
-                elif yCoord == playerLocation[1] - 1:
-                    fieldKey += 'south '
-                if xCoord == playerLocation[0] + 1:
-                    fieldKey += 'east'
-                elif xCoord == playerLocation[0] - 1:
-                    fieldKey += 'west'
-                if xCoord == playerLocation[0] and yCoord == playerLocation[1]:
-                    fieldKey += 'center'
+                fieldKey = repr(xCoord) + ' ' + repr(yCoord) + ' ' + repr(zCoord)
+
                 if fieldIsThere:
                     field = literal_eval(cursor.value().decode())
                     updateArea[fieldKey] = field
@@ -153,15 +139,35 @@ def getPlayerArea(clientHandler, env, staticWorldDB, characterDB):
     return updateArea
 
 
+# TODO: Make a function that returns all of the data a client needs
+def getCompleteUpdate(clientHandler, env, staticWorldDB, characterDB):
+    update = {}
+    area = getPlayerArea(clientHandler, env, staticWorldDB, characterDB)
+    update['fields'] = {}
+    update['fields']['update'] = area
+    characterLocation = getPlayerLocation(clientHandler,
+                                          env,
+                                          characterDB)
+    update['characterLocation'] = repr(characterLocation[0]) + \
+                            ' ' + repr(characterLocation[1]) + \
+                            ' ' + repr(characterLocation[2])
+    return update
+
+
 # This moves the player in the given direction
 def movePlayer(clientHandler, direction, env, staticWorldDB, characterDB):
     playerLocation = getPlayerLocation(clientHandler, env, characterDB)
     txn = env.begin(db=staticWorldDB)
     cursor = txn.cursor(db=staticWorldDB)
+    update = {'fields': {}}
     fieldIsThere = False
     xCoord = playerLocation[0]
     yCoord = playerLocation[1]
     zCoord = playerLocation[2]
+    oldArea = getPlayerArea(clientHandler,
+                            env,
+                            staticWorldDB,
+                            characterDB)
     if direction == 'north':
         try:
             newCoords = pack('III', xCoord, yCoord + 1, zCoord)
@@ -237,13 +243,34 @@ def movePlayer(clientHandler, direction, env, staticWorldDB, characterDB):
         character = cursor.get(pack('I', accountID))
         character = literal_eval(character.decode())
         character['location'] = [xCoord, yCoord, zCoord]
+        update['characterLocation'] = repr(xCoord) + \
+            ' ' \
+            + \
+            repr(yCoord) \
+            + \
+            ' ' \
+            + \
+            repr(zCoord)
         character = bytes(repr(character).encode())
         cursor.put(pack('I', accountID), character)
         txn.commit()
-        updateArea = getPlayerArea(clientHandler,
-                                   env,
-                                   staticWorldDB,
-                                   characterDB)
-        return updateArea
+        newArea = getPlayerArea(clientHandler,
+                                env,
+                                staticWorldDB,
+                                characterDB)
+        for area in oldArea:
+            if area in newArea:
+                if 'update' in update['fields']:
+                    update['fields']['update'][area] = newArea[area]
+                else:
+                    update['fields'].update({'update': {}})
+                    update['fields']['update'][area] = newArea[area]
+            else:
+                if 'remove' in update['fields']:
+                    update['fields']['remove'][area] = oldArea[area]
+                else:
+                    update['fields'].update({'remove': {}})
+                    update['fields']['remove'][area] = oldArea[area]
+        return update
     else:
         return 'destination invalid'

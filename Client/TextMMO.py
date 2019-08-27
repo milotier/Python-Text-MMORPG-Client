@@ -44,7 +44,6 @@ def startGame():
     # and sends a disconnect signal to the server, which closes the connection
     sleep(0.5)
     ServerConnect.sendCommandToServer('disconnect')
-    print('\n\nYou have been disconnected from the server.\n\n')
 
 
 # This is ran at the start of the application

@@ -1,5 +1,5 @@
 from time import sleep
-from Database import movePlayer
+from Database import movePlayer, getCompleteUpdate
 from queue import Queue
 from json import loads
 
@@ -74,10 +74,16 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
             sleep(0.05)
             while not commandQueue.empty():
                 command = commandQueue.get()
-                command['command'] = loads(command['command'])
+                clientTimestamp = command['command'][1]
+                serverTimestamp = command['ClientHandler'].lastSentUpdate
+                clientTimestamp += 10
+                sendFullUpdate = False
+                if abs(serverTimestamp-clientTimestamp) >= 10 and \
+                   clientTimestamp != 0.0:
+                    sendFullUpdate = True
+                command['command'] = loads(command['command'][0])
                 if 'str' in command['command']:
                     if command['command']['str'] == 'disconnect':
-                        print('aborted connection')
                         command['ClientHandler'].transport.abortConnection()
                 else:
                     command['command'] = makeCommand(command['command'])
@@ -90,12 +96,22 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
                         staticWorldDB,
                         characterDB)
                     if type(outcome) == dict:
-                        updateList.append({
-                            'ClientHandler': command['ClientHandler'],
-                            'updates': {'update': {'fields': outcome}}})
+                        if not sendFullUpdate:
+                            updateList.append({
+                                'ClientHandler': command['ClientHandler'],
+                                'updates': outcome})
 
                     elif outcome == 'destination invalid':
                         print('destination invalid')
+
+                if sendFullUpdate:
+                    update = getCompleteUpdate(command['ClientHandler'],
+                                               env,
+                                               staticWorldDB,
+                                               characterDB)
+                    updateList.append({
+                        'ClientHandler': command['ClientHandler'],
+                        'updates': update})
 
             mode = 2
 
@@ -103,6 +119,7 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
             while len(updateList) > 0:
                 update = updateList.pop(0)
                 reactor.callFromThread(update['ClientHandler'].sendData,
-                                       update['updates'])
+                                       update['updates'],
+                                       'update')
                 print('Update sent.')
             mode = 1

@@ -93,13 +93,15 @@ def updateState(updates, app):
                 if change[1] == 'chatWindow':
                     outputArea4Function = 'chatWindow'
     elif type(updates) == dict:
-        if 'update' in updates:
-            if 'fields' in updates['update']:
-                area = updates['update']['fields']
-                playerLocation = area['center']
-            if 'commandOutput' in updates['update']:
-                commandOutputWindowText += updates['update']['commandOutput']
-                commandOutputWindowText += '\n'
+        if 'fields' in updates:
+            if 'update' in updates['fields']:
+                for update in updates['fields']['update']:
+                    area[update] = updates['fields']['update'][update]
+            if 'remove' in updates['fields']:
+                for removal in updates['fields']['remove']:
+                    area.pop(removal, None)
+        if 'characterLocation' in updates:
+            playerLocation = area[updates['characterLocation']]
 
     outputArea4Function = 'chatWindow'
     # chatWindowText = repr(area)
