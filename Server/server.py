@@ -83,6 +83,8 @@ class ClientHandler(LineReceiver):
                     else:
                         if not passwordIsStrongEnough:
                             self.sendData('password too weak', 'message')
+                        elif usernameAlreadyExists == 'username too long':
+                            self.sendData('username too long', 'message')
                         elif usernameAlreadyExists:
                             self.sendData('username already exists', 'message')
 
@@ -90,7 +92,6 @@ class ClientHandler(LineReceiver):
         print('Connection lost.')
         self.transport.abortConnection()
 
-    # TODO: Add timestamp to updates sent by server
     def sendData(self, data, dataType):
         f = Fernet(self.key)
         if dataType == 'update':

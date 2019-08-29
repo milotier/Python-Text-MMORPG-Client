@@ -12,4 +12,4 @@ Once that is done, you need to install the required libraries with pip3. To do t
 
 Then, to start up the server and client, go to their respective directories (start with the server). If you're on a Unix platform, use the command 'python3 MakeDatabase.py' to create the database. Then you should be able to use the command 'python3 Server.py' to start up the server. If you're on Windows, use the commands 'py MakeDatabase.py -3' and 'py Server.py -3'. Then open up a new shell window for the client. Then on Unix, use 'python3 TextMMO.py' and 'py TextMMO.py -3' on Windows. To quit the client, use ctrl-q, and to stop the server do ctrl-c. If you encounter any bugs while testing, please let me know.
 
-For constant updates on my progress, follow me on Twitter @TierMilo.
+For constant updates on my progress, follow me on Twitter @milo_tier.

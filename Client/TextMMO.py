@@ -84,6 +84,9 @@ def login(iteration):
                 elif creationOutcome == 'username already exists':
                     print('That username has already been taken.')
                     tryAgain = True
+                elif creationOutcome == 'username too long':
+                    print('The maximum username length is 15.')
+                    tryAgain = True
                 else:
                     GameState.screenUpdateQueue.put(creationOutcome)
                 validAnswer = True

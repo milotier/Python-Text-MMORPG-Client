@@ -36,8 +36,9 @@ def checkPasswordStrength(password):
     return passwordIsStrongEnough
 
 
-# TODO: Put a maximum on username length
 def checkUsername(username, env, loginDB):
+    if len(username) > 15:
+        return 'username too long'
     txn = env.begin(db=loginDB, write=True)
     cursor = txn.cursor(db=loginDB)
     username = cursor.get(bytes(username.encode()))
@@ -139,7 +140,6 @@ def getPlayerArea(clientHandler, env, staticWorldDB, characterDB):
     return updateArea
 
 
-# TODO: Make a function that returns all of the data a client needs
 def getCompleteUpdate(clientHandler, env, staticWorldDB, characterDB):
     update = {}
     area = getPlayerArea(clientHandler, env, staticWorldDB, characterDB)
