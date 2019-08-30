@@ -7,7 +7,7 @@ from twisted.internet import reactor
 import lmdb
 from ast import literal_eval
 from cryptography.fernet import Fernet
-from time import time
+from time import time, sleep
 
 # The server module (needless to say)
 
@@ -19,7 +19,6 @@ host = ''
 # This is the ClientHandler class (A twisted Protocol)
 # One of these is made everytime a new client connects
 # Functions are overridden that handle different things
-# TODO: Make sure only one client can be connected to an account at a time
 class ClientHandler(LineReceiver):
 
     def __init__(self, users):
@@ -32,7 +31,8 @@ class ClientHandler(LineReceiver):
 
     def connectionMade(self):
         self.transport.write(self.key)
-        self.users.append({'ClientHandler': self})
+        self.users.append(self)
+        print(server.users)
 
     def rawDataReceived(self, command):
         f = Fernet(self.key)
@@ -51,6 +51,11 @@ class ClientHandler(LineReceiver):
                                                                 env,
                                                                 loginDB)
                     if type(detailsMatch) == int:
+                        for user in self.users:
+                            # TODO: Send a message to both clients
+                            # when a second client logs in to the same account
+                            if user.loggedInAccount == detailsMatch:
+                                user.transport.loseConnection()
                         self.isLoggedIn = True
                         self.loggedInAccount = detailsMatch
                         update = Database.getCompleteUpdate(self,
@@ -90,6 +95,7 @@ class ClientHandler(LineReceiver):
 
     def connectionLost(self, reason):
         print('Connection lost.')
+        self.users.pop(self.users.index(self))
         self.transport.abortConnection()
 
     def sendData(self, data, dataType):

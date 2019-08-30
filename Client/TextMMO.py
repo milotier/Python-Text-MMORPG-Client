@@ -79,7 +79,7 @@ def login(iteration):
                 creationOutcome = ServerConnect.createAccount([username,
                                                                password])
                 if creationOutcome == 'password too weak':
-                    print('That password is not strong enough.')
+                    print('That password is not strong enough. It must at least contain one lowercase and uppercase letter, digit and symbol and 8 characters in total.')
                     tryAgain = True
                 elif creationOutcome == 'username already exists':
                     print('That username has already been taken.')
