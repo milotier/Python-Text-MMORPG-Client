@@ -39,6 +39,8 @@ def checkPasswordStrength(password):
 def checkUsername(username, env, loginDB):
     if len(username) > 15:
         return 'username too long'
+    elif len(username) < 1:
+        return 'username too short'
     txn = env.begin(db=loginDB, write=True)
     cursor = txn.cursor(db=loginDB)
     username = cursor.get(bytes(username.encode()))

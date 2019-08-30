@@ -87,6 +87,9 @@ def login(iteration):
                 elif creationOutcome == 'username too long':
                     print('The maximum username length is 15.')
                     tryAgain = True
+                elif creationOutcome == 'username too short':
+                    print('The minimum username length is 1')
+                    tryAgain = True
                 else:
                     GameState.screenUpdateQueue.put(creationOutcome)
                 validAnswer = True

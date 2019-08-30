@@ -83,8 +83,8 @@ class ClientHandler(LineReceiver):
                     else:
                         if not passwordIsStrongEnough:
                             self.sendData('password too weak', 'message')
-                        elif usernameAlreadyExists == 'username too long':
-                            self.sendData('username too long', 'message')
+                        elif type(usernameAlreadyExists) == str:
+                            self.sendData(usernameAlreadyExists, 'message')
                         elif usernameAlreadyExists:
                             self.sendData('username already exists', 'message')
 
