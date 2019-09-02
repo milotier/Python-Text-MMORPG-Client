@@ -42,7 +42,9 @@ txn.commit()
 
 items = {
     pack('I', 0): {'name': 'test item'},
-    pack('I', 1): {'name': 'test item 2'}
+    pack('I', 1): {'name': 'test item 2'},
+    pack('I', 3): {'name': 'test item 3'},
+    pack('I', 4): {'name': 'test item 4'}
 }
 
 itemLocations = {
@@ -54,7 +56,7 @@ itemLocations = {
     pack('III', 1, 2, 5): [],
     pack('III', 2, 0, 5): [],
     pack('III', 2, 1, 5): [],
-    pack('III', 2, 2, 5): []
+    pack('III', 2, 2, 5): [0, 1, 3, 4]
 }
 
 itemDB = env.open_db(bytes('Items'.encode()))

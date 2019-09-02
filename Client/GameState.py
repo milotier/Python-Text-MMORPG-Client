@@ -32,6 +32,8 @@ global area
 area = {}
 global playerLocation
 playerLocation = {}
+global itemLocations
+itemLocations = {}
 
 # This defines the queue object
 # that will order the different updates of the screen as FIFO (FirstInFirstOut)
@@ -51,52 +53,22 @@ def updateState(updates, app):
     global outputArea4Function
     global area
     global playerLocation
+    global itemLocations
     if updates == 'server went down':
         app.exit()
         sleep(0.5)
         print('\n\nThe server is down at the moment.', end=' ')
         print('Please wait and come back later.\n\n')
 
-    if type(updates) == list:
-        for change in updates:
-            if change[0] == 'outputArea1Function':
-                if change[1] == 'skillWindow':
-                    outputArea1Function = 'skillWindow'
-                if change[1] == 'commandOutputWindow':
-                    outputArea1Function = 'commandOutputWindow'
-                if change[1] == 'inventoryWindow':
-                    outputArea1Function = 'inventoryWindow'
-                if change[1] == 'chatWindow':
-                    outputArea1Function = 'chatWindow'
-            elif change[0] == 'outputArea2Function':
-                if change[1] == 'skillWindow':
-                    outputArea2Function = 'skillWindow'
-                if change[1] == 'commandOutputWindow':
-                    outputArea2Function = 'commandOutputWindow'
-                if change[1] == 'inventoryWindow':
-                    outputArea2Function = 'inventoryWindow'
-                if change[1] == 'chatWindow':
-                    outputArea2Function = 'chatWindow'
-            elif change[0] == 'outputArea3Function':
-                if change[1] == 'skillWindow':
-                    outputArea3Function = 'skillWindow'
-                if change[1] == 'commandOutputWindow':
-                    outputArea3Function = 'commandOutputWindow'
-                if change[1] == 'inventoryWindow':
-                    outputArea3Function = 'inventoryWindow'
-                if change[1] == 'chatWindow':
-                    outputArea3Function = 'chatWindow'
-            elif change[0] == 'outputArea4Function':
-                if change[1] == 'skillWindow':
-                    outputArea4Function = 'skillWindow'
-                if change[1] == 'commandOutputWindow':
-                    outputArea4Function = 'commandOutputWindow'
-                if change[1] == 'inventoryWindow':
-                    outputArea4Function = 'inventoryWindow'
-                if change[1] == 'chatWindow':
-                    outputArea4Function = 'chatWindow'
+    elif updates['type'] == 'update':
+        if 'itemLocations' in updates:
+            if 'remove' in updates['itemLocations']:
+                for removal in updates['itemLocations']['remove']:
+                    itemLocations.pop(removal, None)
+            if 'update' in updates['itemLocations']:
+                for update in updates['itemLocations']['update']:
+                    itemLocations[update] = updates['itemLocations']['update'][update]
 
-    elif type(updates) == dict and updates['type'] == 'update':
         if 'staticFields' in updates:
             if 'remove' in updates['staticFields']:
                 for removal in updates['staticFields']['remove']:
@@ -109,7 +81,25 @@ def updateState(updates, app):
             characterLocation = list(map(int, characterLocation))
             for field in area:
                 if field == updates['characterLocation']:
-                    areaDescriptionWindowText += area[field]['description'] + '\n'
+                    areaDescriptionWindowText += area[field]['description'] + '\n\n'
+            for field in itemLocations:
+                if field == updates['characterLocation']:
+                    itemNames = []
+                    for item in itemLocations[field]:
+                        itemNames.append(item['name'])
+                    iteration = 0
+                    for itemName in itemNames:
+                        if iteration == 0 and len(itemNames) == 1:
+                            areaDescriptionWindowText += 'There is a ' + itemName + ' lying on the ground.\n\n'
+                            break
+                        elif iteration == 0 and len(itemNames) > 1:
+                            areaDescriptionWindowText += 'There is a ' + itemName
+                        elif iteration != 0 and iteration + 1 != len(itemNames):
+                            areaDescriptionWindowText += ', ' + itemName
+                        elif iteration != 0 and iteration + 1 == len(itemNames):
+                            areaDescriptionWindowText += ' and ' + itemName + ' lying on the ground.\n\n'
+
+                        iteration += 1
             for field in area:
                 if field != updates['characterLocation']:
                     fieldLocation = field.split(' ')
@@ -194,7 +184,7 @@ def updateState(updates, app):
         if 'characterLocation' in updates:
             playerLocation = area[updates['characterLocation']]
 
-    elif type(updates) == dict and updates['type'] == 'full update':
+    elif updates['type'] == 'full update':
         area = {}
         playerLocation = {}
         for update in updates['staticFields']['update']:
@@ -202,8 +192,28 @@ def updateState(updates, app):
         areaDescriptionWindowText = ''
         for field in area:
             if field == updates['characterLocation']:
-                areaDescriptionWindowText += area[field]['description'] + '\n'
-        
+                areaDescriptionWindowText += area[field]['description'] + '\n\n'
+        itemLocations = {}
+        for update in updates['itemLocations']['update']:
+            itemLocations[update] = updates['itemLocations']['update'][update]
+        for field in itemLocations:
+            if field == updates['characterLocation']:
+                itemNames = []
+                for item in itemLocations[field]:
+                    itemNames.append(item['name'])
+                iteration = 0
+                for itemName in itemNames:
+                    if iteration == 0 and len(itemNames) == 1:
+                        areaDescriptionWindowText += 'There is a ' + itemName + ' lying on the ground.\n\n'
+                        break
+                    elif iteration == 0 and len(itemNames) > 1:
+                        areaDescriptionWindowText += 'There is a ' + itemName
+                    elif iteration != 0 and iteration + 1 != len(itemNames):
+                        areaDescriptionWindowText += ', ' + itemName
+                    elif iteration != 0 and iteration + 1 == len(itemNames):
+                        areaDescriptionWindowText += ' and ' + itemName + ' lying on the ground.\n\n'
+
+                    iteration += 1
         characterLocation = updates['characterLocation'].split(' ')
         characterLocation = list(map(int, characterLocation))
         for field in area:
@@ -288,6 +298,3 @@ def updateState(updates, app):
                                                 area[field]['summary'] + \
                                                 '\n'
         playerLocation = area[updates['characterLocation']]
-
-    outputArea4Function = 'chatWindow'
-    # chatWindowText = repr(area)
