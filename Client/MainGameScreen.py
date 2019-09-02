@@ -153,7 +153,7 @@ def commandAcceptHandler(buff):
        commandInputArea.text != '' and \
        not len(commandInputArea.text) > 50:
         command = '>' + commandInputArea.text
-        GameState.screenUpdateQueue.put({'update': {'commandOutput': command}})
+        GameState.screenUpdateQueue.put({'commandOutput': command, 'type': 'update'})
         CommandController.checkGivenCommand(commandInputArea.text)
 
 
@@ -201,6 +201,9 @@ def updateScreen():
     inventoryWindowText = Document(
         text=GameState.inventoryWindowText,
         cursor_position=len(GameState.inventoryWindowText))
+    areaDescriptionWindowText = Document(
+        text=GameState.areaDescriptionWindowText,
+        cursor_position=len(GameState.areaDescriptionWindowText))
     if GameState.outputArea1Function == 'commandOutputWindow':
         outputArea1.buffer.document = commandOutputWindowText
         outputArea1.text = GameState.commandOutputWindowText
@@ -213,6 +216,9 @@ def updateScreen():
     if GameState.outputArea1Function == 'inventoryWindow':
         outputArea1.buffer.document = inventoryWindowText
         outputArea1.text = GameState.inventoryWindowText
+    if GameState.outputArea1Function == 'areaDescriptionWindow':
+        outputArea1.buffer.document = areaDescriptionWindowText
+        outputArea1.text = GameState.areaDescriptionWindowText
 
     if GameState.outputArea2Function == 'commandOutputWindow':
         outputArea2.buffer.document = commandOutputWindowText
@@ -226,6 +232,9 @@ def updateScreen():
     if GameState.outputArea2Function == 'inventoryWindow':
         outputArea2.buffer.document = inventoryWindowText
         outputArea2.text = GameState.inventoryWindowText
+    if GameState.outputArea2Function == 'areaDescriptionWindow':
+        outputArea2.buffer.document = areaDescriptionWindowText
+        outputArea2.text = GameState.areaDescriptionWindowText
 
     if GameState.outputArea3Function == 'commandOutputWindow':
         outputArea3.text = GameState.commandOutputWindowText
@@ -239,6 +248,9 @@ def updateScreen():
     if GameState.outputArea3Function == 'inventoryWindow':
         outputArea3.text = GameState.inventoryWindowText
         outputArea3.buffer.document = inventoryWindowText
+    if GameState.outputArea3Function == 'areaDescriptionWindow':
+        outputArea3.buffer.document = areaDescriptionWindowText
+        outputArea3.text = GameState.areaDescriptionWindowText
 
     if GameState.outputArea4Function == 'commandOutputWindow':
         outputArea4.text = GameState.commandOutputWindowText
@@ -252,6 +264,9 @@ def updateScreen():
     if GameState.outputArea4Function == 'inventoryWindow':
         outputArea4.text = GameState.inventoryWindowText
         outputArea4.buffer.document = inventoryWindowText
+    if GameState.outputArea4Function == 'areaDescriptionWindow':
+        outputArea4.buffer.document = areaDescriptionWindowText
+        outputArea4.text = GameState.areaDescriptionWindowText
 
     if 'name' in GameState.playerLocation:
         locationText = GameState.playerLocation['name']

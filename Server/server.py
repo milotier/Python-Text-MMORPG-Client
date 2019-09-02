@@ -7,7 +7,7 @@ from twisted.internet import reactor
 import lmdb
 from ast import literal_eval
 from cryptography.fernet import Fernet
-from time import time, sleep
+from time import time
 
 # The server module (needless to say)
 
@@ -32,7 +32,6 @@ class ClientHandler(LineReceiver):
     def connectionMade(self):
         self.transport.write(self.key)
         self.users.append(self)
-        print(server.users)
 
     def rawDataReceived(self, command):
         f = Fernet(self.key)
@@ -52,8 +51,7 @@ class ClientHandler(LineReceiver):
                                                                 loginDB)
                     if type(detailsMatch) == int:
                         for user in self.users:
-                            # TODO: Send a message to both clients
-                            # when a second client logs in to the same account
+                            # TODO: Send a message to both clients when a second client logs in to the same account
                             if user.loggedInAccount == detailsMatch:
                                 user.transport.loseConnection()
                         self.isLoggedIn = True
@@ -61,7 +59,10 @@ class ClientHandler(LineReceiver):
                         update = Database.getCompleteUpdate(self,
                                                             env,
                                                             staticWorldDB,
-                                                            characterDB)
+                                                            characterDB,
+                                                            itemDB,
+                                                            itemLocationDB)
+                        update['type'] = 'full update'
                         self.sendData(update, 'update')
                     else:
                         self.sendData('no match found', 'message')
@@ -83,7 +84,10 @@ class ClientHandler(LineReceiver):
                         update = Database.getCompleteUpdate(self,
                                                             env,
                                                             staticWorldDB,
-                                                            characterDB)
+                                                            characterDB,
+                                                            itemDB,
+                                                            itemLocationDB)
+                        update['type'] = 'full update'
                         self.sendData(update, 'update')
                     else:
                         if not passwordIsStrongEnough:
@@ -119,22 +123,22 @@ class Server(Factory):
 
 server = Server()
 
-
 # This starts up the lmdb environment
-global env
-global staticWorldDB
-global loginDB
 env = lmdb.open('GameDatabase', map_size=1000000, max_dbs=20)
 staticWorldDB = env.open_db(bytes('StaticWorld'.encode()))
 loginDB = env.open_db(bytes('Login'.encode()))
 accountDB = env.open_db(bytes('Accounts'.encode()))
 characterDB = env.open_db(bytes('Characters'.encode()))
+itemDB = env.open_db(bytes('Items'.encode()))
+itemLocationDB = env.open_db(bytes('ItemLocations'.encode()))
 
 # This makes threads that will perform the commands
 commandPerformingThread1 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
                                         characterDB,
+                                        itemDB,
+                                        itemLocationDB,
                                         reactor))
 commandPerformingThread1.daemon = True
 commandPerformingThread1.start()
@@ -143,6 +147,8 @@ commandPerformingThread2 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
                                         characterDB,
+                                        itemDB,
+                                        itemLocationDB,
                                         reactor))
 commandPerformingThread2.daemon = True
 commandPerformingThread2.start()
@@ -151,6 +157,8 @@ commandPerformingThread3 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
                                         characterDB,
+                                        itemDB,
+                                        itemLocationDB,
                                         reactor))
 commandPerformingThread3.daemon = True
 commandPerformingThread3.start()
@@ -159,6 +167,8 @@ commandPerformingThread4 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
                                         characterDB,
+                                        itemDB,
+                                        itemLocationDB,
                                         reactor))
 commandPerformingThread4.daemon = True
 commandPerformingThread4.start()

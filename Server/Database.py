@@ -113,7 +113,7 @@ def getPlayerLocation(clientHandler, env, characterDB):
     return playerLocation
 
 
-# This gets the nine (or less) fields around the player
+# This gets the nine (or less) fields on and around the player
 def getPlayerArea(clientHandler, env, staticWorldDB, characterDB):
     playerLocation = getPlayerLocation(clientHandler, env, characterDB)
     updateArea = {}
@@ -142,26 +142,78 @@ def getPlayerArea(clientHandler, env, staticWorldDB, characterDB):
     return updateArea
 
 
-def getCompleteUpdate(clientHandler, env, staticWorldDB, characterDB):
+# This gets all the items in the nine (or less) fields on and around the player
+def getPlayerItemArea(clientHandler, env, itemLocationDB, itemDB, characterDB):
+    playerLocation = getPlayerLocation(clientHandler,
+                                       env,
+                                       characterDB)
+    itemArea = {}
+    xCoord = playerLocation[0] - 1
+    yCoord = playerLocation[1] + 1
+    zCoord = playerLocation[2]
+    txn = env.begin(db=itemLocationDB)
+    cursor = txn.cursor(db=itemLocationDB)
+    for i in range(3):
+        for i in range(3):
+            isValidField = True
+            try:
+                key = pack('III', xCoord, yCoord, zCoord)
+                fieldIsThere = cursor.set_key(key)
+            except error:
+                isValidField = False
+            if isValidField:
+                fieldKey = repr(xCoord) + ' ' + repr(yCoord) + ' ' + repr(zCoord)
+
+                if fieldIsThere:
+                    field = literal_eval(cursor.value().decode())
+                    itemArea[fieldKey] = field
+            yCoord -= 1
+        xCoord += 1
+        yCoord = playerLocation[1] + 1
+
+    txn = env.begin(db=itemDB)
+    cursor = txn.cursor(db=itemDB)
+    itemValueArea = {}
+    for field in itemArea:
+        itemList = itemArea[field]
+        itemValueList = []
+        for item in itemList:
+            cursor.set_key(pack('I', item))
+            itemValue = cursor.value()
+            itemValue = literal_eval(itemValue.decode())
+            itemValueList.append(itemValue)
+        itemValueArea[field] = itemValueList
+    return itemValueArea
+
+
+# This gets all the data a client needs
+def getCompleteUpdate(clientHandler, env, staticWorldDB, characterDB, itemDB, itemLocationDB):
     update = {}
-    area = getPlayerArea(clientHandler, env, staticWorldDB, characterDB)
-    update['fields'] = {}
-    update['fields']['update'] = area
     characterLocation = getPlayerLocation(clientHandler,
                                           env,
                                           characterDB)
     update['characterLocation'] = repr(characterLocation[0]) + \
                             ' ' + repr(characterLocation[1]) + \
                             ' ' + repr(characterLocation[2])
+    update['staticFields'] = {}
+    update['itemLocations'] = {}
+    area = getPlayerArea(clientHandler, env, staticWorldDB, characterDB)
+    update['staticFields']['update'] = area
+    itemArea = getPlayerItemArea(clientHandler,
+                                 env,
+                                 itemLocationDB,
+                                 itemDB,
+                                 characterDB)
+    update['itemLocations']['update'] = itemArea
     return update
 
 
 # This moves the player in the given direction
-def movePlayer(clientHandler, direction, env, staticWorldDB, characterDB):
+def movePlayer(clientHandler, direction, env, staticWorldDB, characterDB, itemDB, itemLocationDB):
     playerLocation = getPlayerLocation(clientHandler, env, characterDB)
     txn = env.begin(db=staticWorldDB)
     cursor = txn.cursor(db=staticWorldDB)
-    update = {'fields': {}}
+    update = {'staticFields': {}}
     fieldIsThere = False
     xCoord = playerLocation[0]
     yCoord = playerLocation[1]
@@ -260,19 +312,43 @@ def movePlayer(clientHandler, direction, env, staticWorldDB, characterDB):
                                 env,
                                 staticWorldDB,
                                 characterDB)
+        for area in newArea:
+            if area not in oldArea:
+                if 'update' in update['staticFields']:
+                    update['staticFields']['update'][area] = newArea[area]
+                else:
+                    update['staticFields'].update({'update': {}})
+                    update['staticFields']['update'][area] = newArea[area]
+
         for area in oldArea:
-            if area in newArea:
-                if 'update' in update['fields']:
-                    update['fields']['update'][area] = newArea[area]
+            if area not in newArea:
+                if 'remove' in update['staticFields']:
+                    update['staticFields']['remove'][area] = oldArea[area]
                 else:
-                    update['fields'].update({'update': {}})
-                    update['fields']['update'][area] = newArea[area]
-            else:
-                if 'remove' in update['fields']:
-                    update['fields']['remove'][area] = oldArea[area]
+                    update['staticFields'].update({'remove': {}})
+                    update['staticFields']['remove'][area] = oldArea[area]
+        update['itemLocations'] = {}
+        itemArea = getPlayerItemArea(clientHandler,
+                                     env,
+                                     itemLocationDB,
+                                     itemDB,
+                                     characterDB)
+        for area in itemArea:
+            if area not in oldArea:
+                if 'update' in update['itemLocations']:
+                    update['itemLocations']['update'][area] = itemArea[area]
                 else:
-                    update['fields'].update({'remove': {}})
-                    update['fields']['remove'][area] = oldArea[area]
+                    update['itemLocations'].update({'update': {}})
+                    update['itemLocations']['update'][area] = itemArea[area]
+
+        for area in oldArea:
+            if area not in itemArea:
+                if 'remove' in update['itemLocations']:
+                    update['itemLocations']['remove'][area] = oldArea[area]
+                else:
+                    update['itemLocations'].update({'remove': {}})
+                    update['itemLocations']['remove'][area] = oldArea[area]
+        print(update)
         return update
     else:
         return 'destination invalid'

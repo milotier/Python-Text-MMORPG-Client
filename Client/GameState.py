@@ -11,6 +11,7 @@ global playerInfoWindowText
 global commandOutputWindowText
 global inventoryWindowText
 global chatWindowText
+global areaDescriptionWindowText
 global outputArea1Function
 global outputArea2Function
 global outputArea3Function
@@ -18,13 +19,14 @@ global outputArea4Function
 
 # TODO: Add more functions the output windows can have
 outputArea1Function = 'inventoryWindow'
-outputArea2Function = 'skillWindow'
+outputArea2Function = 'areaDescriptionWindow'
 outputArea3Function = 'commandOutputWindow'
 outputArea4Function = 'chatWindow'
 inventoryWindowText = ''
 skillWindowText = ''
 commandOutputWindowText = ''
 chatWindowText = ''
+areaDescriptionWindowText = ''
 
 global area
 area = {}
@@ -42,6 +44,7 @@ def updateState(updates, app):
     global commandOutputWindowText
     global inventoryWindowText
     global chatWindowText
+    global areaDescriptionWindowText
     global outputArea1Function
     global outputArea2Function
     global outputArea3Function
@@ -92,16 +95,199 @@ def updateState(updates, app):
                     outputArea4Function = 'inventoryWindow'
                 if change[1] == 'chatWindow':
                     outputArea4Function = 'chatWindow'
-    elif type(updates) == dict:
-        if 'fields' in updates:
-            if 'update' in updates['fields']:
-                for update in updates['fields']['update']:
-                    area[update] = updates['fields']['update'][update]
-            if 'remove' in updates['fields']:
-                for removal in updates['fields']['remove']:
+
+    elif type(updates) == dict and updates['type'] == 'update':
+        if 'staticFields' in updates:
+            if 'remove' in updates['staticFields']:
+                for removal in updates['staticFields']['remove']:
                     area.pop(removal, None)
+            if 'update' in updates['staticFields']:
+                for update in updates['staticFields']['update']:
+                    area[update] = updates['staticFields']['update'][update]
+            areaDescriptionWindowText = ''
+            characterLocation = updates['characterLocation'].split(' ')
+            characterLocation = list(map(int, characterLocation))
+            for field in area:
+                if field == updates['characterLocation']:
+                    areaDescriptionWindowText += area[field]['description'] + '\n'
+            for field in area:
+                if field != updates['characterLocation']:
+                    fieldLocation = field.split(' ')
+                    fieldLocation = list(map(int, fieldLocation))
+                    if characterLocation[1] < fieldLocation[1] and \
+                       fieldLocation[0] == characterLocation[0] and \
+                       fieldLocation[2] == fieldLocation[2]:
+                        areaDescriptionWindowText += 'To the north you see ' + \
+                                                    area[field]['summary'] + \
+                                                    '\n'
+
+            for field in area:
+                if field != updates['characterLocation']:
+                    fieldLocation = field.split(' ')
+                    fieldLocation = list(map(int, fieldLocation))
+                    if characterLocation[1] > fieldLocation[1] and \
+                       fieldLocation[0] == characterLocation[0] and \
+                       fieldLocation[2] == fieldLocation[2]:
+                        areaDescriptionWindowText += 'To the south you see ' + \
+                                                    area[field]['summary'] + \
+                                                    '\n'
+            for field in area:
+                if field != updates['characterLocation']:
+                    fieldLocation = field.split(' ')
+                    fieldLocation = list(map(int, fieldLocation))
+                    if characterLocation[0] < fieldLocation[0] and \
+                       fieldLocation[1] == characterLocation[1] and \
+                       fieldLocation[2] == fieldLocation[2]:
+                        areaDescriptionWindowText += 'To the east you see ' + \
+                                                    area[field]['summary'] + \
+                                                    '\n'
+            for field in area:
+                if field != updates['characterLocation']:
+                    fieldLocation = field.split(' ')
+                    fieldLocation = list(map(int, fieldLocation))
+                    if characterLocation[0] > fieldLocation[0] and \
+                       fieldLocation[1] == characterLocation[1] and \
+                       fieldLocation[2] == fieldLocation[2]:
+                        areaDescriptionWindowText += 'To the west you see ' + \
+                                                    area[field]['summary'] + \
+                                                    '\n'
+            for field in area:
+                if field != updates['characterLocation']:
+                    fieldLocation = field.split(' ')
+                    fieldLocation = list(map(int, fieldLocation))
+                    if characterLocation[1] < fieldLocation[1] and \
+                       fieldLocation[0] > characterLocation[0] and \
+                       fieldLocation[2] == fieldLocation[2]:
+                        areaDescriptionWindowText += 'To the northeast you see ' + \
+                                                    area[field]['summary'] + \
+                                                    '\n'
+            for field in area:
+                if field != updates['characterLocation']:
+                    fieldLocation = field.split(' ')
+                    fieldLocation = list(map(int, fieldLocation))
+                    if characterLocation[1] < fieldLocation[1] and \
+                       fieldLocation[0] < characterLocation[0] and \
+                       fieldLocation[2] == fieldLocation[2]:
+                        areaDescriptionWindowText += 'To the northwest you see ' + \
+                                                    area[field]['summary'] + \
+                                                    '\n'
+            for field in area:
+                if field != updates['characterLocation']:
+                    fieldLocation = field.split(' ')
+                    fieldLocation = list(map(int, fieldLocation))
+                    if characterLocation[1] > fieldLocation[1] and \
+                       fieldLocation[0] > characterLocation[0] and \
+                       fieldLocation[2] == fieldLocation[2]:
+                        areaDescriptionWindowText += 'To the southeast you see ' + \
+                                                    area[field]['summary'] + \
+                                                    '\n'
+            for field in area:
+                if field != updates['characterLocation']:
+                    fieldLocation = field.split(' ')
+                    fieldLocation = list(map(int, fieldLocation))
+                    if characterLocation[1] > fieldLocation[1] and \
+                       fieldLocation[0] < characterLocation[0] and \
+                       fieldLocation[2] == fieldLocation[2]:
+                        areaDescriptionWindowText += 'To the southwest you see ' + \
+                                                    area[field]['summary'] + \
+                                                    '\n'
         if 'characterLocation' in updates:
             playerLocation = area[updates['characterLocation']]
+
+    elif type(updates) == dict and updates['type'] == 'full update':
+        area = {}
+        playerLocation = {}
+        for update in updates['staticFields']['update']:
+            area[update] = updates['staticFields']['update'][update]
+        areaDescriptionWindowText = ''
+        for field in area:
+            if field == updates['characterLocation']:
+                areaDescriptionWindowText += area[field]['description'] + '\n'
+        
+        characterLocation = updates['characterLocation'].split(' ')
+        characterLocation = list(map(int, characterLocation))
+        for field in area:
+            if field != updates['characterLocation']:
+                fieldLocation = field.split(' ')
+                fieldLocation = list(map(int, fieldLocation))
+                if characterLocation[1] < fieldLocation[1] and \
+                   fieldLocation[0] == characterLocation[0] and \
+                   fieldLocation[2] == fieldLocation[2]:
+                    areaDescriptionWindowText += 'To the north you see ' + \
+                                                area[field]['summary'] + \
+                                                '\n'
+
+        for field in area:
+            if field != updates['characterLocation']:
+                fieldLocation = field.split(' ')
+                fieldLocation = list(map(int, fieldLocation))
+                if characterLocation[1] > fieldLocation[1] and \
+                   fieldLocation[0] == characterLocation[0] and \
+                   fieldLocation[2] == fieldLocation[2]:
+                    areaDescriptionWindowText += 'To the south you see ' + \
+                                                area[field]['summary'] + \
+                                                '\n'
+        for field in area:
+            if field != updates['characterLocation']:
+                fieldLocation = field.split(' ')
+                fieldLocation = list(map(int, fieldLocation))
+                if characterLocation[0] < fieldLocation[0] and \
+                   fieldLocation[1] == characterLocation[1] and \
+                   fieldLocation[2] == fieldLocation[2]:
+                    areaDescriptionWindowText += 'To the east you see ' + \
+                                                area[field]['summary'] + \
+                                                '\n'
+        for field in area:
+            if field != updates['characterLocation']:
+                fieldLocation = field.split(' ')
+                fieldLocation = list(map(int, fieldLocation))
+                if characterLocation[0] > fieldLocation[0] and \
+                   fieldLocation[1] == characterLocation[1] and \
+                   fieldLocation[2] == fieldLocation[2]:
+                    areaDescriptionWindowText += 'To the west you see ' + \
+                                                area[field]['summary'] + \
+                                                '\n'
+        for field in area:
+            if field != updates['characterLocation']:
+                fieldLocation = field.split(' ')
+                fieldLocation = list(map(int, fieldLocation))
+                if characterLocation[1] < fieldLocation[1] and \
+                   fieldLocation[0] > characterLocation[0] and \
+                   fieldLocation[2] == fieldLocation[2]:
+                    areaDescriptionWindowText += 'To the northeast you see ' + \
+                                                area[field]['summary'] + \
+                                                '\n'
+        for field in area:
+            if field != updates['characterLocation']:
+                fieldLocation = field.split(' ')
+                fieldLocation = list(map(int, fieldLocation))
+                if characterLocation[1] < fieldLocation[1] and \
+                   fieldLocation[0] < characterLocation[0] and \
+                   fieldLocation[2] == fieldLocation[2]:
+                    areaDescriptionWindowText += 'To the northwest you see ' + \
+                                                area[field]['summary'] + \
+                                                '\n'
+        for field in area:
+            if field != updates['characterLocation']:
+                fieldLocation = field.split(' ')
+                fieldLocation = list(map(int, fieldLocation))
+                if characterLocation[1] > fieldLocation[1] and \
+                   fieldLocation[0] > characterLocation[0] and \
+                   fieldLocation[2] == fieldLocation[2]:
+                    areaDescriptionWindowText += 'To the southeast you see ' + \
+                                                area[field]['summary'] + \
+                                                '\n'
+        for field in area:
+            if field != updates['characterLocation']:
+                fieldLocation = field.split(' ')
+                fieldLocation = list(map(int, fieldLocation))
+                if characterLocation[1] > fieldLocation[1] and \
+                   fieldLocation[0] < characterLocation[0] and \
+                   fieldLocation[2] == fieldLocation[2]:
+                    areaDescriptionWindowText += 'To the southwest you see ' + \
+                                                area[field]['summary'] + \
+                                                '\n'
+        playerLocation = area[updates['characterLocation']]
 
     outputArea4Function = 'chatWindow'
     # chatWindowText = repr(area)

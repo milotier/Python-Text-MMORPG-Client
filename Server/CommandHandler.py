@@ -65,7 +65,7 @@ def makeCommand(command):
 
 # Function that will repeatedly perform commands received from the clients
 # and send updates to these clients
-def performCommands(env, staticWorldDB, characterDB, reactor):
+def performCommands(env, staticWorldDB, characterDB, itemDB, itemLocationDB, reactor):
     global commandQueue
     global updateList
     mode = 1
@@ -76,7 +76,6 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
                 command = commandQueue.get()
                 clientTimestamp = command['command'][1]
                 serverTimestamp = command['ClientHandler'].lastSentUpdate
-                clientTimestamp += 10
                 sendFullUpdate = False
                 if abs(serverTimestamp-clientTimestamp) >= 10 and \
                    clientTimestamp != 0.0:
@@ -94,9 +93,12 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
                         command['command'].direction.direction,
                         env,
                         staticWorldDB,
-                        characterDB)
+                        characterDB,
+                        itemDB,
+                        itemLocationDB)
                     if type(outcome) == dict:
                         if not sendFullUpdate:
+                            outcome['type'] = 'update'
                             updateList.append({
                                 'ClientHandler': command['ClientHandler'],
                                 'updates': outcome})
@@ -108,7 +110,10 @@ def performCommands(env, staticWorldDB, characterDB, reactor):
                     update = getCompleteUpdate(command['ClientHandler'],
                                                env,
                                                staticWorldDB,
-                                               characterDB)
+                                               characterDB,
+                                               itemDB,
+                                               itemLocationDB)
+                    update['type'] = 'full update'
                     updateList.append({
                         'ClientHandler': command['ClientHandler'],
                         'updates': update})
