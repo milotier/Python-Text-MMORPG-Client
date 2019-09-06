@@ -133,6 +133,23 @@ def parseGivenCommand(tokenList):
                 if index > 1:
                     itemName += ' ' + token['input']
                 index += 1
+        
+        elif verb['verbType'] == 'pick' and tokenList[1]['type'] == 'keyword':
+            if tokenList[1]['keyword'] == 'up':
+                index = 2
+                itemName = ''
+                while not index > len(tokenList) - 1:
+                    token = tokenList[index]
+                    if index == len(tokenList) - 1:
+                        itemName += ' ' + token['input']
+                        command = TakeCommand(verb['input'],
+                                            verb['commentFactor'],
+                                            itemName)
+                    if index == 2:
+                        itemName += token['input']
+                    if index > 2:
+                        itemName += ' ' + token['input']
+                    index += 1
 
     elif tokenList[0]['type'] == 'direction' and len(tokenList) == 1:
         token = tokenList[0]
