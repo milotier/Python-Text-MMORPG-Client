@@ -143,8 +143,8 @@ def parseGivenCommand(tokenList):
                     if index == len(tokenList) - 1:
                         itemName += ' ' + token['input']
                         command = TakeCommand(verb['input'],
-                                            verb['commentFactor'],
-                                            itemName)
+                                              verb['commentFactor'],
+                                              itemName)
                     if index == 2:
                         itemName += token['input']
                     if index > 2:

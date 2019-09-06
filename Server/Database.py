@@ -440,6 +440,7 @@ def takeItem(clientHandler,
         if item['name'] == targetItem.itemName:
             itemExists = True
             item = item
+            break
     if itemExists:
         playerLocation = getPlayerLocation(clientHandler,
                                            env,
