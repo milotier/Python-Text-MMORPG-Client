@@ -76,14 +76,25 @@ def updateState(updates, app):
             if 'update' in updates['staticFields']:
                 for update in updates['staticFields']['update']:
                     area[update] = updates['staticFields']['update'][update]
+
+
+        if 'characterLocation' in updates:
+            playerLocation = area[updates['characterLocation']]
+
+        if 'staticFields' in updates or 'itemLocations' in updates:
             areaDescriptionWindowText = ''
-            characterLocation = updates['characterLocation'].split(' ')
+            characterLocationString = ''
+            for field in area:
+                if area[field] == playerLocation:
+                    characterLocationString = field
+            characterLocation = characterLocationString.split(' ')
             characterLocation = list(map(int, characterLocation))
             for field in area:
-                if field == updates['characterLocation']:
+                if field == characterLocationString:
                     areaDescriptionWindowText += area[field]['description'] + '\n\n'
+
             for field in itemLocations:
-                if field == updates['characterLocation']:
+                if field == characterLocationString:
                     itemNames = []
                     for item in itemLocations[field]:
                         itemNames.append(item['name'])
@@ -100,8 +111,9 @@ def updateState(updates, app):
                             areaDescriptionWindowText += ' and ' + itemName + ' lying on the ground.\n\n'
 
                         iteration += 1
+            
             for field in area:
-                if field != updates['characterLocation']:
+                if field != characterLocationString:
                     fieldLocation = field.split(' ')
                     fieldLocation = list(map(int, fieldLocation))
                     if characterLocation[1] < fieldLocation[1] and \
@@ -112,7 +124,7 @@ def updateState(updates, app):
                                                     '\n'
 
             for field in area:
-                if field != updates['characterLocation']:
+                if field != characterLocationString:
                     fieldLocation = field.split(' ')
                     fieldLocation = list(map(int, fieldLocation))
                     if characterLocation[1] > fieldLocation[1] and \
@@ -122,7 +134,7 @@ def updateState(updates, app):
                                                     area[field]['summary'] + \
                                                     '\n'
             for field in area:
-                if field != updates['characterLocation']:
+                if field != characterLocationString:
                     fieldLocation = field.split(' ')
                     fieldLocation = list(map(int, fieldLocation))
                     if characterLocation[0] < fieldLocation[0] and \
@@ -132,7 +144,7 @@ def updateState(updates, app):
                                                     area[field]['summary'] + \
                                                     '\n'
             for field in area:
-                if field != updates['characterLocation']:
+                if field != characterLocationString:
                     fieldLocation = field.split(' ')
                     fieldLocation = list(map(int, fieldLocation))
                     if characterLocation[0] > fieldLocation[0] and \
@@ -142,7 +154,7 @@ def updateState(updates, app):
                                                     area[field]['summary'] + \
                                                     '\n'
             for field in area:
-                if field != updates['characterLocation']:
+                if field != characterLocationString:
                     fieldLocation = field.split(' ')
                     fieldLocation = list(map(int, fieldLocation))
                     if characterLocation[1] < fieldLocation[1] and \
@@ -152,7 +164,7 @@ def updateState(updates, app):
                                                     area[field]['summary'] + \
                                                     '\n'
             for field in area:
-                if field != updates['characterLocation']:
+                if field != characterLocationString:
                     fieldLocation = field.split(' ')
                     fieldLocation = list(map(int, fieldLocation))
                     if characterLocation[1] < fieldLocation[1] and \
@@ -162,7 +174,7 @@ def updateState(updates, app):
                                                     area[field]['summary'] + \
                                                     '\n'
             for field in area:
-                if field != updates['characterLocation']:
+                if field != characterLocationString:
                     fieldLocation = field.split(' ')
                     fieldLocation = list(map(int, fieldLocation))
                     if characterLocation[1] > fieldLocation[1] and \
@@ -172,7 +184,7 @@ def updateState(updates, app):
                                                     area[field]['summary'] + \
                                                     '\n'
             for field in area:
-                if field != updates['characterLocation']:
+                if field != characterLocationString:
                     fieldLocation = field.split(' ')
                     fieldLocation = list(map(int, fieldLocation))
                     if characterLocation[1] > fieldLocation[1] and \
@@ -181,8 +193,6 @@ def updateState(updates, app):
                         areaDescriptionWindowText += 'To the southwest you see ' + \
                                                     area[field]['summary'] + \
                                                     '\n'
-        if 'characterLocation' in updates:
-            playerLocation = area[updates['characterLocation']]
 
     elif updates['type'] == 'full update':
         area = {}

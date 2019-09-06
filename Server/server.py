@@ -78,7 +78,8 @@ class ClientHandler(LineReceiver):
                                                            env,
                                                            loginDB,
                                                            characterDB,
-                                                           accountDB)
+                                                           accountDB,
+                                                           inventoryDB)
                         self.isLoggedIn = True
                         self.loggedInAccount = accountID
                         update = Database.getCompleteUpdate(self,
@@ -131,6 +132,7 @@ accountDB = env.open_db(bytes('Accounts'.encode()))
 characterDB = env.open_db(bytes('Characters'.encode()))
 itemDB = env.open_db(bytes('Items'.encode()))
 itemLocationDB = env.open_db(bytes('ItemLocations'.encode()))
+inventoryDB = env.open_db(bytes('Inventories'.encode()))
 
 # This makes threads that will perform the commands
 commandPerformingThread1 = Thread(target=CommandHandler.performCommands,
@@ -139,6 +141,7 @@ commandPerformingThread1 = Thread(target=CommandHandler.performCommands,
                                         characterDB,
                                         itemDB,
                                         itemLocationDB,
+                                        inventoryDB,
                                         reactor))
 commandPerformingThread1.daemon = True
 commandPerformingThread1.start()
@@ -149,6 +152,7 @@ commandPerformingThread2 = Thread(target=CommandHandler.performCommands,
                                         characterDB,
                                         itemDB,
                                         itemLocationDB,
+                                        inventoryDB,
                                         reactor))
 commandPerformingThread2.daemon = True
 commandPerformingThread2.start()
@@ -159,6 +163,7 @@ commandPerformingThread3 = Thread(target=CommandHandler.performCommands,
                                         characterDB,
                                         itemDB,
                                         itemLocationDB,
+                                        inventoryDB,
                                         reactor))
 commandPerformingThread3.daemon = True
 commandPerformingThread3.start()
@@ -169,6 +174,7 @@ commandPerformingThread4 = Thread(target=CommandHandler.performCommands,
                                         characterDB,
                                         itemDB,
                                         itemLocationDB,
+                                        inventoryDB,
                                         reactor))
 commandPerformingThread4.daemon = True
 commandPerformingThread4.start()

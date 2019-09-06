@@ -33,5 +33,5 @@
         (r'southwest',   True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 1, 'input': 'southwest'}),
         (r'south-west',  True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 2, 'input': 'north-west'}),
         (r'sw',          True,          {'type': 'direction', 'direction': 'south-west', 'commentFactor': 0, 'input': 'sw'}),
-        (r'[A-Za-z][A-Za-z0-9_]*', False, {'type': 'name'})
+        (r'[A-Za-z0-9_][A-Za-z0-9_]*', False, {'type': 'name'})
 ]

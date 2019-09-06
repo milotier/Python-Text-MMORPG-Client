@@ -41,10 +41,10 @@ for field in staticWorld:
 txn.commit()
 
 items = {
-    pack('I', 0): {'name': 'test item'},
-    pack('I', 1): {'name': 'test item 2'},
-    pack('I', 3): {'name': 'test item 3'},
-    pack('I', 4): {'name': 'test item 4'}
+    pack('I', 0): {'name': 'test item', 'ID': 0},
+    pack('I', 1): {'name': 'test item 2', 'ID': 1},
+    pack('I', 2): {'name': 'test item 3', 'ID': 2},
+    pack('I', 3): {'name': 'test item 4', 'ID': 3}
 }
 
 itemLocations = {
@@ -56,7 +56,7 @@ itemLocations = {
     pack('III', 1, 2, 5): [],
     pack('III', 2, 0, 5): [],
     pack('III', 2, 1, 5): [],
-    pack('III', 2, 2, 5): [0, 1, 3, 4]
+    pack('III', 2, 2, 5): [0, 1, 2, 3]
 }
 
 itemDB = env.open_db(bytes('Items'.encode()))
@@ -73,6 +73,7 @@ txn.commit()
 loginDB = env.open_db(bytes('Login'.encode()))
 charactersDB = env.open_db(bytes('Characters'.encode()))
 env.open_db(bytes('Accounts'.encode()))
+env.open_db(bytes('Inventories'.encode()))
 
 txn = env.begin(write=True)
 for field in staticWorld:

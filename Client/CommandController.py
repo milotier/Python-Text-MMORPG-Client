@@ -17,6 +17,12 @@ class Direction:
         self.directionCommentFactor = directionCommentFactor
 
 
+class Item:
+    def __init__(self,
+                 itemName):
+        self.itemName = itemName
+
+
 class Command:
     def __init__(self,
                  verbCommentFactor,
@@ -30,7 +36,7 @@ class Command:
         for commentFactor in commentFactorList:
             self.commentFactor += commentFactor
             commentFactorNum += 1
-        self.commentFactor = commentFactor / commentFactorNum
+        self.commentFactor = self.commentFactor / commentFactorNum
 
 
 class TravelCommand(Command):
@@ -46,6 +52,17 @@ class TravelCommand(Command):
         self.direction = Direction(direction,
                                    inputDirection,
                                    directionCommentFactor)
+
+
+class TakeCommand(Command):
+    def __init__(self,
+                 inputVerb,
+                 verbCommentFactor,
+                 itemName):
+        super().__init__(verbCommentFactor,
+                         inputVerb,
+                         [])
+        self.targetItem = Item(itemName)
 
 
 # This changes the string inputted by the player into a list of tokens
@@ -100,6 +117,22 @@ def parseGivenCommand(tokenList):
                                         direction['direction'],
                                         direction['input'],
                                         direction['commentFactor'])
+
+        elif verb['verbType'] == 'take':
+            index = 1
+            itemName = ''
+            while not index > len(tokenList) - 1:
+                token = tokenList[index]
+                if index == len(tokenList) - 1:
+                    itemName += ' ' + token['input']
+                    command = TakeCommand(verb['input'],
+                                          verb['commentFactor'],
+                                          itemName)
+                if index == 1:
+                    itemName += token['input']
+                if index > 1:
+                    itemName += ' ' + token['input']
+                index += 1
 
     elif tokenList[0]['type'] == 'direction' and len(tokenList) == 1:
         token = tokenList[0]

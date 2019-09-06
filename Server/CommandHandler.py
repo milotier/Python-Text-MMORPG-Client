@@ -1,5 +1,5 @@
 from time import sleep
-from Database import movePlayer, getCompleteUpdate
+from Database import movePlayer, takeItem, getCompleteUpdate
 from queue import Queue
 from json import loads
 
@@ -21,6 +21,12 @@ class Direction:
         self.directionCommentFactor = directionCommentFactor
 
 
+class Item:
+    def __init__(self,
+                 itemName):
+        self.itemName = itemName
+
+
 class Command:
     def __init__(self, verbCommentFactor, inputVerb, commentFactorList):
         self.inputVerb = inputVerb
@@ -31,7 +37,7 @@ class Command:
         for commentFactor in commentFactorList:
             self.commentFactor += commentFactor
             commentFactorNum += 1
-        self.commentFactor = commentFactor / commentFactorNum
+        self.commentFactor = self.commentFactor / commentFactorNum
 
 
 class TravelCommand(Command):
@@ -49,23 +55,47 @@ class TravelCommand(Command):
                                    directionCommentFactor)
 
 
+class TakeCommand(Command):
+    def __init__(self,
+                 inputVerb,
+                 verbCommentFactor,
+                 itemName):
+        super().__init__(verbCommentFactor,
+                         inputVerb,
+                         [])
+        self.targetItem = Item(itemName)
+
+
 # This will make a command object
 # based on what type of command the server has received
 def makeCommand(command):
     if 'TravelCommand' in command:
         command = command['TravelCommand']
-        travelCommand = TravelCommand(
+        command = TravelCommand(
             command['inputVerb'],
             command['verbCommentFactor'],
             command['direction']['direction'],
             command['direction']['inputDirection'],
             command['direction']['directionCommentFactor'])
-        return travelCommand
+    elif 'TakeCommand' in command:
+        command = command['TakeCommand']
+        command = TakeCommand(
+            command['inputVerb'],
+            command['verbCommentFactor'],
+            command['targetItem']['itemName']
+        )
+    return command
 
 
 # Function that will repeatedly perform commands received from the clients
 # and send updates to these clients
-def performCommands(env, staticWorldDB, characterDB, itemDB, itemLocationDB, reactor):
+def performCommands(env,
+                    staticWorldDB,
+                    characterDB,
+                    itemDB,
+                    itemLocationDB,
+                    inventoryDB,
+                    reactor):
     global commandQueue
     global updateList
     mode = 1
@@ -105,6 +135,25 @@ def performCommands(env, staticWorldDB, characterDB, itemDB, itemLocationDB, rea
 
                     elif outcome == 'destination invalid':
                         print('destination invalid')
+
+                if type(command['command']) == TakeCommand:
+                    outcome = takeItem(
+                        command['ClientHandler'],
+                        command['command'].targetItem,
+                        env,
+                        inventoryDB,
+                        itemLocationDB,
+                        itemDB,
+                        characterDB)
+                    print(outcome)
+                    if type(outcome) == dict:
+                        if not sendFullUpdate:
+                            outcome['type'] = 'update'
+                            updateList.append({
+                                'ClientHandler': command['ClientHandler'],
+                                'updates': outcome})
+                    elif outcome == 'item nonexisting':
+                        print('item doesn\'t exist.')
 
                 if sendFullUpdate:
                     update = getCompleteUpdate(command['ClientHandler'],
