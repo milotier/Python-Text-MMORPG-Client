@@ -51,7 +51,8 @@ class ClientHandler(LineReceiver):
                                                                 loginDB)
                     if type(detailsMatch) == int:
                         for user in self.users:
-                            # TODO: Send a message to both clients when a second client logs in to the same account
+                            # TODO: Send a message to both clients
+                            # when a second client logs in to the same account
                             if user.loggedInAccount == detailsMatch:
                                 user.transport.loseConnection()
                         self.isLoggedIn = True
@@ -61,7 +62,8 @@ class ClientHandler(LineReceiver):
                                                             staticWorldDB,
                                                             characterDB,
                                                             itemDB,
-                                                            itemLocationDB)
+                                                            itemLocationDB,
+                                                            inventoryDB)
                         update['type'] = 'full update'
                         self.sendData(update, 'update')
                     else:
@@ -87,7 +89,8 @@ class ClientHandler(LineReceiver):
                                                             staticWorldDB,
                                                             characterDB,
                                                             itemDB,
-                                                            itemLocationDB)
+                                                            itemLocationDB,
+                                                            inventoryDB)
                         update['type'] = 'full update'
                         self.sendData(update, 'update')
                     else:

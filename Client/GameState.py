@@ -18,8 +18,8 @@ global outputArea3Function
 global outputArea4Function
 
 # TODO: Add more functions the output windows can have
-outputArea1Function = 'inventoryWindow'
-outputArea2Function = 'areaDescriptionWindow'
+outputArea1Function = 'areaDescriptionWindow'
+outputArea2Function = 'inventoryWindow'
 outputArea3Function = 'commandOutputWindow'
 outputArea4Function = 'chatWindow'
 inventoryWindowText = ''
@@ -28,10 +28,12 @@ commandOutputWindowText = ''
 chatWindowText = ''
 areaDescriptionWindowText = ''
 
-global area
-area = {}
 global playerLocation
 playerLocation = {}
+global inventory
+inventory = []
+global area
+area = {}
 global itemLocations
 itemLocations = {}
 
@@ -54,6 +56,7 @@ def updateState(updates, app):
     global area
     global playerLocation
     global itemLocations
+    global inventory
     if updates == 'server went down':
         app.exit()
         sleep(0.5)
@@ -77,9 +80,22 @@ def updateState(updates, app):
                 for update in updates['staticFields']['update']:
                     area[update] = updates['staticFields']['update'][update]
 
-
         if 'characterLocation' in updates:
             playerLocation = area[updates['characterLocation']]
+
+        if 'inventory' in updates:
+            if 'update' in updates['inventory']:
+                for item in updates['inventory']['update']:
+                    inventory.append(item)
+            if 'remove' in updates['inventory']:
+                for item in updates['inventory']['update']:
+                    inventory.remove(item)
+            if inventory:
+                inventoryWindowText = 'You are currently carrying:\n'
+                for item in inventory:
+                    inventoryWindowText += '    a ' + item['name'] + '\n'
+            else:
+                inventoryWindowText = 'You aren\'t carrying anything right now.'
 
         if 'staticFields' in updates or 'itemLocations' in updates:
             areaDescriptionWindowText = ''
@@ -193,6 +209,7 @@ def updateState(updates, app):
                         areaDescriptionWindowText += 'To the southwest you see ' + \
                                                     area[field]['summary'] + \
                                                     '\n'
+        
 
     elif updates['type'] == 'full update':
         area = {}
@@ -308,3 +325,12 @@ def updateState(updates, app):
                                                 area[field]['summary'] + \
                                                 '\n'
         playerLocation = area[updates['characterLocation']]
+        inventory = []
+        for item in updates['inventory']['update']:
+            inventory.append(item)
+        if inventory:
+            inventoryWindowText = 'You are currently carrying:\n'
+            for item in inventory:
+                inventoryWindowText += '    a ' + item['name'] + '\n'
+        else:
+            inventoryWindowText = 'You aren\'t carrying anything right now.'

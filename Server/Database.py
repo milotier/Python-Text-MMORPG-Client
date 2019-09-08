@@ -235,7 +235,8 @@ def getCompleteUpdate(clientHandler,
                       staticWorldDB,
                       characterDB,
                       itemDB,
-                      itemLocationDB):
+                      itemLocationDB,
+                      inventoryDB):
     txn = env.begin(write=True)
     update = {}
     characterLocation = getPlayerLocation(clientHandler,
@@ -256,6 +257,12 @@ def getCompleteUpdate(clientHandler,
                                  itemDB,
                                  characterDB)
     update['itemLocations']['update'] = itemArea
+    inventory = getPlayerInventory(clientHandler,
+                                   env,
+                                   txn,
+                                   inventoryDB)
+    update['inventory'] = {}
+    update['inventory']['update'] = inventory
     return update
 
 
@@ -447,14 +454,12 @@ def takeItem(clientHandler,
                                            txn,
                                            characterDB)
         cursor = txn.cursor(db=itemLocationDB)
+        print(item)
         itemField.remove(item)
-        print('old' + repr(itemField))
         newItemField = []
-        for item in itemField:
-            print(item)
-            newItem = item['ID']
+        for fieldItem in itemField:
+            newItem = fieldItem['ID']
             newItemField.append(newItem)
-        print(newItemField)
         cursor.put(pack('III', playerLocation[0], playerLocation[1], playerLocation[2]), bytes(repr(newItemField).encode()))
         cursor.close()
         inventory = getPlayerInventory(clientHandler,
@@ -474,6 +479,8 @@ def takeItem(clientHandler,
         update['itemLocations'] = {}
         update['itemLocations']['update'] = {}
         update['itemLocations']['update'][playerLocation] = itemField
+        update['inventory'] = {}
+        update['inventory']['update'] = [item]
         txn.commit()
         return update
     else:

@@ -155,13 +155,14 @@ def performCommands(env,
                     elif outcome == 'item nonexisting':
                         print('item doesn\'t exist.')
 
-                if sendFullUpdate:
+                if sendFullUpdate and type(outcome) == dict:
                     update = getCompleteUpdate(command['ClientHandler'],
                                                env,
                                                staticWorldDB,
                                                characterDB,
                                                itemDB,
-                                               itemLocationDB)
+                                               itemLocationDB,
+                                               inventoryDB)
                     update['type'] = 'full update'
                     updateList.append({
                         'ClientHandler': command['ClientHandler'],
