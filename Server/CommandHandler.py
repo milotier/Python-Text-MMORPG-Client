@@ -1,5 +1,8 @@
 from time import sleep
-from Database import movePlayer, takeItem, getCompleteUpdate
+from Database import movePlayer, \
+                     takeItem, \
+                     dropItem, \
+                     getCompleteUpdate
 from queue import Queue
 from json import loads
 
@@ -66,6 +69,17 @@ class TakeCommand(Command):
         self.targetItem = Item(itemName)
 
 
+class DropCommand(Command):
+    def __init__(self,
+                 inputVerb,
+                 verbCommentFactor,
+                 itemName):
+        super().__init__(verbCommentFactor,
+                         inputVerb,
+                         [])
+        self.targetItem = Item(itemName)
+
+
 # This will make a command object
 # based on what type of command the server has received
 def makeCommand(command):
@@ -82,8 +96,13 @@ def makeCommand(command):
         command = TakeCommand(
             command['inputVerb'],
             command['verbCommentFactor'],
-            command['targetItem']['itemName']
-        )
+            command['targetItem']['itemName'])
+    elif 'DropCommand' in command:
+        command = command['DropCommand']
+        command = DropCommand(
+            command['inputVerb'],
+            command['verbCommentFactor'],
+            command['targetItem']['itemName'])
     return command
 
 
@@ -145,7 +164,24 @@ def performCommands(env,
                         itemLocationDB,
                         itemDB,
                         characterDB)
-                    print(outcome)
+                    if type(outcome) == dict:
+                        if not sendFullUpdate:
+                            outcome['type'] = 'update'
+                            updateList.append({
+                                'ClientHandler': command['ClientHandler'],
+                                'updates': outcome})
+                    elif outcome == 'item nonexisting':
+                        print('item doesn\'t exist.')
+                
+                if type(command['command']) == DropCommand:
+                    outcome = dropItem(
+                        command['ClientHandler'],
+                        command['command'].targetItem,
+                        env,
+                        inventoryDB,
+                        itemLocationDB,
+                        itemDB,
+                        characterDB)
                     if type(outcome) == dict:
                         if not sendFullUpdate:
                             outcome['type'] = 'update'

@@ -88,7 +88,7 @@ def updateState(updates, app):
                 for item in updates['inventory']['update']:
                     inventory.append(item)
             if 'remove' in updates['inventory']:
-                for item in updates['inventory']['update']:
+                for item in updates['inventory']['remove']:
                     inventory.remove(item)
             if inventory:
                 inventoryWindowText = 'You are currently carrying:\n'

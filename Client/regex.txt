@@ -11,6 +11,8 @@
         (r'seize',       True,          {'type': 'verb', 'verbType': 'take', 'commentFactor': 1, 'input': 'seize'}),
         (r'pick',        True,          {'type': 'verb', 'verbType': 'pick', 'commentFactor': 1, 'input': 'pick'}),
 
+	(r'drop',        True,          {'type': 'verb', 'verbType': 'drop', 'commentFactor': 1, 'input': 'drop'}),
+
         (r'up',          True,          {'type': 'keyword', 'keyword': 'up', 'commentFactor': 1, 'input': 'up'}),
 
         (r'north',       True,          {'type': 'direction', 'direction': 'north', 'commentFactor': 1, 'input': 'north'}),

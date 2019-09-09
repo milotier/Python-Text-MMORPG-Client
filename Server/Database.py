@@ -208,12 +208,9 @@ def getPlayerItemArea(clientHandler,
     for field in itemArea:
         itemList = itemArea[field]
         itemValueList = []
-        print(itemList)
         for item in itemList:
-            print(item)
             cursor.set_key(pack('I', item))
             itemValue = cursor.value()
-            print(itemValue)
             itemValue = literal_eval(itemValue.decode())
             itemValueList.append(itemValue)
         itemValueArea[field] = itemValueList
@@ -405,7 +402,6 @@ def movePlayer(clientHandler,
                                      itemLocationDB,
                                      itemDB,
                                      characterDB)
-        print(oldItemArea)
         for area in itemArea:
             if area not in oldArea:
                 if 'update' in update['itemLocations']:
@@ -422,7 +418,6 @@ def movePlayer(clientHandler,
                     update['itemLocations'].update({'remove': {}})
                     update['itemLocations']['remove'][area] = oldItemArea[area]
         txn.commit()
-        print(update)
         return update
     else:
         return 'destination invalid'
@@ -481,6 +476,67 @@ def takeItem(clientHandler,
         update['itemLocations']['update'][playerLocation] = itemField
         update['inventory'] = {}
         update['inventory']['update'] = [item]
+        txn.commit()
+        return update
+    else:
+        return 'item nonexisting'
+        txn.commit()
+
+
+def dropItem(clientHandler,
+             targetItem,
+             env,
+             inventoryDB,
+             itemLocationDB,
+             itemDB,
+             characterDB):
+    txn = env.begin(write=True)
+    inventory = getPlayerInventory(clientHandler,
+                                   env,
+                                   txn,
+                                   inventoryDB)
+    itemExists = False
+    for item in inventory:
+        if item['name'] == targetItem.itemName:
+            itemExists = True
+            item = item
+            break
+    if itemExists:
+        playerLocation = getPlayerLocation(clientHandler,
+                                           env,
+                                           txn,
+                                           characterDB)
+        cursor = txn.cursor(db=inventoryDB)
+        inventory.remove(item)
+        accountID = clientHandler.loggedInAccount
+        cursor.put(pack('I', accountID), bytes(repr(inventory).encode()))
+        cursor.close()
+        itemField = getPlayerItemField(clientHandler,
+                                       env,
+                                       txn,
+                                       itemLocationDB,
+                                       itemDB,
+                                       characterDB)
+        itemField.append(item)
+        print(itemField)
+        cursor = txn.cursor(db=itemLocationDB)
+        print(playerLocation)
+        newItemField = []
+        for fieldItem in itemField:
+            newItem = fieldItem['ID']
+            newItemField.append(newItem)
+        cursor.put(pack('III', playerLocation[0], playerLocation[1], playerLocation[2]), bytes(repr(newItemField).encode()))
+        cursor.close()
+
+        playerLocation = repr(playerLocation[0]) + ' ' + \
+                         repr(playerLocation[1]) + ' ' + \
+                         repr(playerLocation[2])
+        update = {}
+        update['itemLocations'] = {}
+        update['itemLocations']['update'] = {}
+        update['itemLocations']['update'][playerLocation] = itemField
+        update['inventory'] = {}
+        update['inventory']['remove'] = [item]
         txn.commit()
         return update
     else:

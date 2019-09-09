@@ -65,6 +65,17 @@ class TakeCommand(Command):
         self.targetItem = Item(itemName)
 
 
+class DropCommand(Command):
+    def __init__(self,
+                 inputVerb,
+                 verbCommentFactor,
+                 itemName):
+        super().__init__(verbCommentFactor,
+                         inputVerb,
+                         [])
+        self.targetItem = Item(itemName)
+
+
 # This changes the string inputted by the player into a list of tokens
 def lexGivenCommand(characters):
     tokenExprFile = open('regex.txt', 'r')
@@ -150,6 +161,22 @@ def parseGivenCommand(tokenList):
                     if index > 2:
                         itemName += ' ' + token['input']
                     index += 1
+        
+        elif verb['verbType'] == 'drop':
+            index = 1
+            itemName = ''
+            while not index > len(tokenList) - 1:
+                token = tokenList[index]
+                if index == len(tokenList) - 1:
+                    itemName += ' ' + token['input']
+                    command = DropCommand(verb['input'],
+                                          verb['commentFactor'],
+                                          itemName)
+                if index == 1:
+                    itemName += token['input']
+                if index > 1:
+                    itemName += ' ' + token['input']
+                index += 1
 
     elif tokenList[0]['type'] == 'direction' and len(tokenList) == 1:
         token = tokenList[0]
