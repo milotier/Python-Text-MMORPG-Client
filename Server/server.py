@@ -31,7 +31,6 @@ class ClientHandler(LineReceiver):
 
     def connectionMade(self):
         self.transport.write(self.key)
-        self.users.append(self)
 
     def rawDataReceived(self, command):
         f = Fernet(self.key)
@@ -50,13 +49,12 @@ class ClientHandler(LineReceiver):
                                                                 env,
                                                                 loginDB)
                     if type(detailsMatch) == int:
-                        for user in self.users:
-                            # TODO: Send a message to both clients
-                            # when a second client logs in to the same account
-                            if user.loggedInAccount == detailsMatch:
-                                user.transport.loseConnection()
+                        if detailsMatch in self.users:
+                            self.users[detailsMatch].loggedInAccount = None
+                            self.users[detailsMatch].transport.loseConnection()
                         self.isLoggedIn = True
                         self.loggedInAccount = detailsMatch
+                        self.users[detailsMatch] = self
                         update = Database.getCompleteUpdate(self,
                                                             env,
                                                             staticWorldDB,
@@ -80,10 +78,12 @@ class ClientHandler(LineReceiver):
                                                            env,
                                                            loginDB,
                                                            characterDB,
+                                                           characterLocationDB,
                                                            accountDB,
                                                            inventoryDB)
                         self.isLoggedIn = True
                         self.loggedInAccount = accountID
+                        self.users[accountID] = self
                         update = Database.getCompleteUpdate(self,
                                                             env,
                                                             staticWorldDB,
@@ -103,7 +103,8 @@ class ClientHandler(LineReceiver):
 
     def connectionLost(self, reason):
         print('Connection lost.')
-        self.users.pop(self.users.index(self))
+        if self.loggedInAccount is not None:
+            self.users.pop(self.loggedInAccount)
         self.transport.abortConnection()
 
     def sendData(self, data, dataType):
@@ -119,7 +120,7 @@ class ClientHandler(LineReceiver):
 class Server(Factory):
 
     def __init__(self):
-        self.users = []
+        self.users = {}
 
     def buildProtocol(self, addr):
         return ClientHandler(self.users)
@@ -133,6 +134,7 @@ staticWorldDB = env.open_db(bytes('StaticWorld'.encode()))
 loginDB = env.open_db(bytes('Login'.encode()))
 accountDB = env.open_db(bytes('Accounts'.encode()))
 characterDB = env.open_db(bytes('Characters'.encode()))
+characterLocationDB = env.open_db(bytes('CharacterLocations'.encode()))
 itemDB = env.open_db(bytes('Items'.encode()))
 itemLocationDB = env.open_db(bytes('ItemLocations'.encode()))
 inventoryDB = env.open_db(bytes('Inventories'.encode()))
@@ -142,10 +144,12 @@ commandPerformingThread1 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
                                         characterDB,
+                                        characterLocationDB,
                                         itemDB,
                                         itemLocationDB,
                                         inventoryDB,
-                                        reactor))
+                                        reactor,
+                                        server.users))
 commandPerformingThread1.daemon = True
 commandPerformingThread1.start()
 
@@ -153,10 +157,12 @@ commandPerformingThread2 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
                                         characterDB,
+                                        characterLocationDB,
                                         itemDB,
                                         itemLocationDB,
                                         inventoryDB,
-                                        reactor))
+                                        reactor,
+                                        server.users))
 commandPerformingThread2.daemon = True
 commandPerformingThread2.start()
 
@@ -164,10 +170,12 @@ commandPerformingThread3 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
                                         characterDB,
+                                        characterLocationDB,
                                         itemDB,
                                         itemLocationDB,
                                         inventoryDB,
-                                        reactor))
+                                        reactor,
+                                        server.users))
 commandPerformingThread3.daemon = True
 commandPerformingThread3.start()
 
@@ -175,15 +183,16 @@ commandPerformingThread4 = Thread(target=CommandHandler.performCommands,
                                   args=(env,
                                         staticWorldDB,
                                         characterDB,
+                                        characterLocationDB,
                                         itemDB,
                                         itemLocationDB,
                                         inventoryDB,
-                                        reactor))
+                                        reactor,
+                                        server.users))
 commandPerformingThread4.daemon = True
 commandPerformingThread4.start()
 
 # This will run the server on the specified ip and port
 # and run the twisted eventloop
 reactor.listenTCP(port, server, interface=host)
-
 reactor.run()

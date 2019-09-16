@@ -51,7 +51,14 @@ def checkUsername(username, env, loginDB):
     return usernameExists
 
 
-def createAccount(username, password, env, loginDB, characterDB, accountDB, inventoryDB):
+def createAccount(username,
+                  password,
+                  env,
+                  loginDB,
+                  characterDB,
+                  characterLocationDB,
+                  accountDB,
+                  inventoryDB):
     hashedPassword = bcrypt.hash(password)
     txn = env.begin(write=True)
     cursor = txn.cursor(db=accountDB)
@@ -84,6 +91,13 @@ def createAccount(username, password, env, loginDB, characterDB, accountDB, inve
     cursor = txn.cursor(db=inventoryDB)
     cursor.put(pack('I', accountID), bytes(repr([]).encode()))
     cursor.close()
+
+    cursor = txn.cursor(db=characterLocationDB)
+    field = cursor.get(pack('III', 1, 1, 5))
+    field = literal_eval(field.decode())
+    field.append(accountID)
+    cursor.put(pack('III', 1, 1, 5), bytes(repr(field).encode()))
+    cursor.close()
     txn.commit()
     return accountID
 
@@ -113,6 +127,52 @@ def getPlayerLocation(clientHandler, env, txn, characterDB):
     playerLocation = character['location']
     cursor.close()
     return playerLocation
+
+
+def getPlayerLocationField(clientHandler,
+                           env,
+                           txn,
+                           characterDB,
+                           characterLocationDB):
+    playerLocation = getPlayerLocation(clientHandler, env, txn, characterDB)
+    cursor = txn.cursor(db=characterLocationDB)
+    playerLocationField = cursor.get(pack('III',
+                                          playerLocation[0],
+                                          playerLocation[1],
+                                          playerLocation[2]))
+    playerLocationField = literal_eval(playerLocationField.decode())
+    return playerLocationField
+
+
+def getPlayerLocationArea(clientHandler,
+                          env,
+                          txn,
+                          characterDB,
+                          characterLocationDB):
+    playerLocation = getPlayerLocation(clientHandler, env, txn, characterDB)
+    playerLocationArea = {}
+    xCoord = playerLocation[0] - 1
+    yCoord = playerLocation[1] + 1
+    zCoord = playerLocation[2]
+    cursor = txn.cursor(db=characterLocationDB)
+    for i in range(3):
+        for i in range(3):
+            isValidField = True
+            try:
+                key = pack('III', xCoord, yCoord, zCoord)
+                fieldIsThere = cursor.set_key(key)
+            except error:
+                isValidField = False
+            if isValidField:
+                fieldKey = repr(xCoord) + ' ' + repr(yCoord) + ' ' + repr(zCoord)
+
+                if fieldIsThere:
+                    field = literal_eval(cursor.value().decode())
+                    playerLocationArea[fieldKey] = field
+            yCoord -= 1
+        xCoord += 1
+        yCoord = playerLocation[1] + 1
+    return playerLocationArea
 
 
 # This gets the nine (or less) fields on and around the player
@@ -269,6 +329,7 @@ def movePlayer(clientHandler,
                env,
                staticWorldDB,
                characterDB,
+               characterLocationDB,
                itemDB,
                itemLocationDB):
     txn = env.begin(write=True)
@@ -375,6 +436,33 @@ def movePlayer(clientHandler,
             repr(zCoord)
         character = bytes(repr(character).encode())
         cursor.put(pack('I', accountID), character)
+        cursor.close()
+        cursor = txn.cursor(db=characterLocationDB)
+        characterLocationArea = getPlayerLocationArea(clientHandler,
+                                                      env,
+                                                      txn,
+                                                      characterDB,
+                                                      characterLocationDB)
+        oldPlayerLocation = repr(playerLocation[0]) + ' ' + \
+                            repr(playerLocation[1]) + ' ' + \
+                            repr(playerLocation[2])
+        characterLocationField = characterLocationArea[oldPlayerLocation]
+        characterLocationField.remove(accountID)
+        cursor.put(pack('III', playerLocation[0],
+                               playerLocation[1],
+                               playerLocation[2]),
+                   bytes(repr(characterLocationField).encode()))
+        newCharacterLocationField = getPlayerLocationField(clientHandler,
+                                                           env,
+                                                           txn,
+                                                           characterDB,
+                                                           characterLocationDB)
+        newCharacterLocationField.append(accountID)
+        cursor.put(pack('III', xCoord,
+                               yCoord,
+                               zCoord),
+                   bytes(repr(newCharacterLocationField).encode()))
+        cursor.close()
         newArea = getPlayerArea(clientHandler,
                                 env,
                                 txn,
@@ -418,7 +506,9 @@ def movePlayer(clientHandler,
                     update['itemLocations'].update({'remove': {}})
                     update['itemLocations']['remove'][area] = oldItemArea[area]
         txn.commit()
-        return update
+        updates = {}
+        updates[accountID] = update
+        return updates
     else:
         return 'destination invalid'
 
@@ -429,7 +519,8 @@ def takeItem(clientHandler,
              inventoryDB,
              itemLocationDB,
              itemDB,
-             characterDB):
+             characterDB,
+             characterLocationDB):
     txn = env.begin(write=True)
     itemField = getPlayerItemField(clientHandler,
                                    env,
@@ -449,7 +540,6 @@ def takeItem(clientHandler,
                                            txn,
                                            characterDB)
         cursor = txn.cursor(db=itemLocationDB)
-        print(item)
         itemField.remove(item)
         newItemField = []
         for fieldItem in itemField:
@@ -466,7 +556,6 @@ def takeItem(clientHandler,
         cursor = txn.cursor(db=inventoryDB)
         cursor.put(pack('I', accountID), bytes(repr(inventory).encode()))
         cursor.close()
-
         playerLocation = repr(playerLocation[0]) + ' ' + \
                          repr(playerLocation[1]) + ' ' + \
                          repr(playerLocation[2])
@@ -476,8 +565,23 @@ def takeItem(clientHandler,
         update['itemLocations']['update'][playerLocation] = itemField
         update['inventory'] = {}
         update['inventory']['update'] = [item]
+        updates = {}
+        updates[accountID] = update
+        characterLocationArea = getPlayerLocationArea(clientHandler,
+                                                      env,
+                                                      txn,
+                                                      characterDB,
+                                                      characterLocationDB)
+        for location in characterLocationArea:
+            for character in characterLocationArea[location]:
+                if character != accountID and character in clientHandler.users:
+                    updates[character] = {}
+                    updates[character]['itemLocations'] = {}
+                    updates[character]['itemLocations']['update'] = {}
+                    updates[character]['itemLocations']['update'][playerLocation] = itemField
+        print(updates)
         txn.commit()
-        return update
+        return updates
     else:
         return 'item nonexisting'
         txn.commit()
@@ -489,7 +593,8 @@ def dropItem(clientHandler,
              inventoryDB,
              itemLocationDB,
              itemDB,
-             characterDB):
+             characterDB,
+             characterLocationDB):
     txn = env.begin(write=True)
     inventory = getPlayerInventory(clientHandler,
                                    env,
@@ -518,9 +623,7 @@ def dropItem(clientHandler,
                                        itemDB,
                                        characterDB)
         itemField.append(item)
-        print(itemField)
         cursor = txn.cursor(db=itemLocationDB)
-        print(playerLocation)
         newItemField = []
         for fieldItem in itemField:
             newItem = fieldItem['ID']
@@ -537,8 +640,22 @@ def dropItem(clientHandler,
         update['itemLocations']['update'][playerLocation] = itemField
         update['inventory'] = {}
         update['inventory']['remove'] = [item]
+        updates = {}
+        updates[accountID] = update
+        characterLocationArea = getPlayerLocationArea(clientHandler,
+                                                      env,
+                                                      txn,
+                                                      characterDB,
+                                                      characterLocationDB)
         txn.commit()
-        return update
+        for location in characterLocationArea:
+            for character in characterLocationArea[location]:
+                if character != accountID and character in clientHandler.users:
+                    updates[character] = {}
+                    updates[character]['itemLocations'] = {}
+                    updates[character]['itemLocations']['update'] = {}
+                    updates[character]['itemLocations']['update'][playerLocation] = itemField
+        return updates
     else:
         return 'item nonexisting'
         txn.commit()

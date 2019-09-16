@@ -32,6 +32,17 @@ staticWorld = {
                            'summary': '225'}
 }
 
+characterLocations = {
+    pack('III', 0, 0, 5): [],
+    pack('III', 0, 1, 5): [],
+    pack('III', 0, 2, 5): [],
+    pack('III', 1, 0, 5): [],
+    pack('III', 1, 1, 5): [],
+    pack('III', 1, 2, 5): [],
+    pack('III', 2, 0, 5): [],
+    pack('III', 2, 1, 5): [],
+    pack('III', 2, 2, 5): []
+}
 
 env = lmdb.open('GameDatabase', map_size=1000000, max_dbs=20)
 staticWorldDB = env.open_db(bytes('StaticWorld'.encode()))
@@ -69,6 +80,11 @@ itemLocationDB = env.open_db(bytes('ItemLocations'.encode()))
 txn = env.begin(write=True, db=itemLocationDB)
 for location in itemLocations:
     txn.put(location, bytes(repr(itemLocations[location]).encode()))
+txn.commit()
+characterLocationDB = env.open_db(bytes('CharacterLocations'.encode()))
+txn = env.begin(write=True, db=characterLocationDB)
+for location in characterLocations:
+    txn.put(location, bytes(repr(characterLocations[location]).encode()))
 txn.commit()
 loginDB = env.open_db(bytes('Login'.encode()))
 charactersDB = env.open_db(bytes('Characters'.encode()))

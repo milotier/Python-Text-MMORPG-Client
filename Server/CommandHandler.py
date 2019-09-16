@@ -11,7 +11,7 @@ from json import loads
 global commandQueue
 commandQueue = Queue()
 
-# This is the list of updates that need to sent to the clients
+# This is the list of updates that need to be sent to the clients
 global updateList
 updateList = []
 
@@ -111,10 +111,12 @@ def makeCommand(command):
 def performCommands(env,
                     staticWorldDB,
                     characterDB,
+                    characterLocationDB,
                     itemDB,
                     itemLocationDB,
                     inventoryDB,
-                    reactor):
+                    reactor,
+                    users):
     global commandQueue
     global updateList
     mode = 1
@@ -143,11 +145,14 @@ def performCommands(env,
                         env,
                         staticWorldDB,
                         characterDB,
+                        characterLocationDB,
                         itemDB,
                         itemLocationDB)
                     if type(outcome) == dict:
                         if not sendFullUpdate:
-                            outcome['type'] = 'update'
+                            for item in outcome:
+                                if type(item) == int:
+                                    outcome[item]['type'] = 'update'
                             updateList.append({
                                 'ClientHandler': command['ClientHandler'],
                                 'updates': outcome})
@@ -163,16 +168,19 @@ def performCommands(env,
                         inventoryDB,
                         itemLocationDB,
                         itemDB,
-                        characterDB)
+                        characterDB,
+                        characterLocationDB)
                     if type(outcome) == dict:
                         if not sendFullUpdate:
-                            outcome['type'] = 'update'
+                            for item in outcome:
+                                if type(item) == int:
+                                    outcome[item]['type'] = 'update'
                             updateList.append({
                                 'ClientHandler': command['ClientHandler'],
                                 'updates': outcome})
                     elif outcome == 'item nonexisting':
                         print('item doesn\'t exist.')
-                
+
                 if type(command['command']) == DropCommand:
                     outcome = dropItem(
                         command['ClientHandler'],
@@ -181,10 +189,13 @@ def performCommands(env,
                         inventoryDB,
                         itemLocationDB,
                         itemDB,
-                        characterDB)
+                        characterDB,
+                        characterLocationDB)
                     if type(outcome) == dict:
                         if not sendFullUpdate:
-                            outcome['type'] = 'update'
+                            for item in outcome:
+                                if type(item) == int:
+                                    outcome[item]['type'] = 'update'
                             updateList.append({
                                 'ClientHandler': command['ClientHandler'],
                                 'updates': outcome})
@@ -208,9 +219,15 @@ def performCommands(env,
 
         while mode == 2:
             while len(updateList) > 0:
-                update = updateList.pop(0)
-                reactor.callFromThread(update['ClientHandler'].sendData,
-                                       update['updates'],
-                                       'update')
-                print('Update sent.')
+                updates = updateList.pop(0)
+                print(updates)
+                for update in updates['updates']:
+                    if type(update) == int:
+                        print(users[update])
+                        client = users[update]
+                        print(client)
+                        reactor.callFromThread(client.sendData,
+                                               updates['updates'][update],
+                                               'update')
+                        print('Update sent.')
             mode = 1
