@@ -83,6 +83,7 @@ def lexGivenCommand(characters):
     tokenExprs = literal_eval(tokenExprs)
     tokens = []
     words = characters.split(' ')
+    print(words)
     while '' in words:
         for word in words:
             if word == '':
@@ -191,6 +192,7 @@ def parseGivenCommand(tokenList):
 
 # This checks if the inputted command is formatted correctly and exists
 def checkGivenCommand(command):
+    print(command)
     lexedCommand = lexGivenCommand(command)
     command = parseGivenCommand(lexedCommand)
     sendCommandToServer(command)

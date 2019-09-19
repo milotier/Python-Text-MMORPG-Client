@@ -132,6 +132,7 @@ def performCommands(env,
                    clientTimestamp != 0.0:
                     sendFullUpdate = True
                 command['command'] = loads(command['command'][0])
+                print(command['command'])
                 if 'str' in command['command']:
                     if command['command']['str'] == 'disconnect':
                         command['ClientHandler'].transport.abortConnection()
@@ -220,14 +221,11 @@ def performCommands(env,
         while mode == 2:
             while len(updateList) > 0:
                 updates = updateList.pop(0)
-                print(updates)
                 for update in updates['updates']:
                     if type(update) == int:
-                        print(users[update])
                         client = users[update]
-                        print(client)
                         reactor.callFromThread(client.sendData,
                                                updates['updates'][update],
                                                'update')
-                        print('Update sent.')
+                        print('Update sent to account ' + repr(update))
             mode = 1

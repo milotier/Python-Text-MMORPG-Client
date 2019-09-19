@@ -79,6 +79,7 @@ def sendCommandToServer(sendingCommand):
     f = Fernet(clientKey)
     sendingCommand = [sendingCommand, lastReceivedUpdate]
     sendingCommand = f.encrypt(bytes(repr(sendingCommand).encode()))
+    #print('sent ' + sendingCommand)
     client.sendall(sendingCommand)
 
 

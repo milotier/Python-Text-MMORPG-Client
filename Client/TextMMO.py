@@ -21,15 +21,14 @@ def doScreenUpdates():
     while True:
         if not GameState.screenUpdateQueue.empty():
             screenUpdate = GameState.screenUpdateQueue.get()
-            GameState.updateState(screenUpdate, MainGameScreen.app)
-            MainGameScreen.updateScreen()
+            MainGameScreen.updateQueue.put(screenUpdate)
+            GameState.updateState(screenUpdate, MainGameScreen.root)
         sleep(0.05)
 
 
 # This starts up the threads and eventloop of the application
 def startGame():
     print('\n\nYou have been succesfully connected to the server.\n\n')
-    MainGameScreen.updateScreen()
     getUpdatesFromServerThread = Thread(
         target=ServerConnect.getUpdatesFromServer,
         args=(GameState.screenUpdateQueue,))
@@ -39,7 +38,7 @@ def startGame():
     screenUpdateThread.daemon = True
     screenUpdateThread.start()
     sleep(1)
-    MainGameScreen.main()
+    MainGameScreen.runMainloop()
     # When the eventloop stops, this is ran
     # and sends a disconnect signal to the server, which closes the connection
     sleep(0.5)
