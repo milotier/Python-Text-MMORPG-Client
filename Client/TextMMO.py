@@ -1,10 +1,10 @@
-import MainGameScreen
 import ServerConnect
 from time import sleep
 from threading import Thread
 from sys import exit
 import GameState
 from getpass import getpass
+import MainGameScreen
 
 # The main module which starts all the different threads
 # and the application's eventloop
@@ -18,6 +18,7 @@ isLoggedIn = False
 
 # This will be ran by the thread that handles the screen updates
 def doScreenUpdates():
+    sleep(0.1)
     while True:
         if not GameState.screenUpdateQueue.empty():
             screenUpdate = GameState.screenUpdateQueue.get()
@@ -37,7 +38,6 @@ def startGame():
     screenUpdateThread = Thread(target=doScreenUpdates)
     screenUpdateThread.daemon = True
     screenUpdateThread.start()
-    sleep(1)
     MainGameScreen.runMainloop()
     # When the eventloop stops, this is ran
     # and sends a disconnect signal to the server, which closes the connection
@@ -103,8 +103,16 @@ def login(iteration):
     return tryAgain
 
 
-tryAgain = login('first')
+try:
+    tryAgain = login('first')
+except KeyboardInterrupt:
+    print('')
+    exit()
 while tryAgain:
-    tryAgain = login(None)
+    try:
+        tryAgain = login(None)
+    except KeyboardInterrupt:
+        print('')
+        exit()
 
 startGame()

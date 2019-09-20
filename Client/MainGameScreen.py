@@ -76,63 +76,6 @@ def quitGame(event):
     exit()
 
 
-root = Tk(className='Text MMORPG')
-root.columnconfigure(0, weight=1)
-root.columnconfigure(1, weight=1)
-root.rowconfigure(0, weight=0)
-root.rowconfigure(1, weight=1)
-root.rowconfigure(2, weight=1)
-root.rowconfigure(3, weight=0)
-
-gameFont = Font(family='times new roman', size=12)
-outputArea1 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
-outputArea1.see('end')
-outputArea1.tag_add('normal', "1.0", "end")
-outputArea1.tag_config('normal', foreground="black")
-outputArea1.grid(row=1, column=0, sticky='nsew')
-chars = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
-for char in chars:
-    outputArea1.bind_all(char, handleCommand)
-outputArea1.bind_all('<Key-BackSpace>', handleCommand)
-outputArea1.bind_all('<Key-Return>', handleCommand)
-outputArea1.bind_all('<Control-Key-q>', quitGame)
-
-topWindow1 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', height=1, font=gameFont, background='white')
-topWindow1.grid(row=0, column=0, sticky='nsew')
-topWindow1.see('end')
-topWindow1.tag_add("normal", "0.0", "end")
-topWindow1.tag_config("normal", foreground="black")
-
-topWindow2 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', height=1, font=gameFont, background='white')
-topWindow2.grid(row=0, column=1, sticky='nsew')
-topWindow2.see('end')
-topWindow2.tag_add("normal", "0.0", "1000.1000")
-topWindow2.tag_config("normal", foreground="black")
-
-outputArea2 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
-outputArea2.see('end')
-outputArea2.grid(row=1, column=1, sticky='nsew')
-outputArea2.tag_add("normal", "0.0", "1000.1000")
-outputArea2.tag_config("normal", foreground="black")
-
-outputArea3 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
-outputArea3.see('end')
-outputArea3.grid(row=2, column=0, sticky='nsew')
-outputArea3.tag_add("normal", "0.0", "1000.1000")
-outputArea3.tag_config("normal", foreground="black")
-
-outputArea4 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
-outputArea4.see('end')
-outputArea4.grid(row=2, column=1, sticky='nsew')
-outputArea4.tag_add("normal", "0.0", "1.1000")
-outputArea4.tag_config("normal", foreground="black")
-
-commandInputArea = Text(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', height=1, fg='black', font=gameFont, background='white')
-commandInputArea.grid(row=3, column=0, sticky='nsew', columnspan=2)
-
-visible = outputArea1.bbox("end-1c")
-print(visible)
-
 updateQueue = Queue()
 
 
@@ -190,5 +133,68 @@ def updateScreen():
 
 
 def runMainloop():
+    global root
+    global gameFont
+    global outputArea1
+    global outputArea2
+    global outputArea3
+    global outputArea4
+    global topWindow1
+    global topWindow2
+    global commandInputArea
+    root = Tk(className='Text MMORPG')
+    root.columnconfigure(0, weight=1)
+    root.columnconfigure(1, weight=1)
+    root.rowconfigure(0, weight=0)
+    root.rowconfigure(1, weight=1)
+    root.rowconfigure(2, weight=1)
+    root.rowconfigure(3, weight=0)
+
+    gameFont = Font(family='times new roman', size=12)
+    outputArea1 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
+    outputArea1.see('end')
+    outputArea1.tag_add('normal', "1.0", "end")
+    outputArea1.tag_config('normal', foreground="black")
+    outputArea1.grid(row=1, column=0, sticky='nsew')
+    chars = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
+    for char in chars:
+        outputArea1.bind_all(char, handleCommand)
+    outputArea1.bind_all('<Key-BackSpace>', handleCommand)
+    outputArea1.bind_all('<Key-Return>', handleCommand)
+    outputArea1.bind_all('<Control-Key-q>', quitGame)
+
+    topWindow1 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', height=1, font=gameFont, background='white')
+    topWindow1.grid(row=0, column=0, sticky='nsew')
+    topWindow1.see('end')
+    topWindow1.tag_add("normal", "0.0", "end")
+    topWindow1.tag_config("normal", foreground="black")
+
+    topWindow2 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', height=1, font=gameFont, background='white')
+    topWindow2.grid(row=0, column=1, sticky='nsew')
+    topWindow2.see('end')
+    topWindow2.tag_add("normal", "0.0", "1000.1000")
+    topWindow2.tag_config("normal", foreground="black")
+
+    outputArea2 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
+    outputArea2.see('end')
+    outputArea2.grid(row=1, column=1, sticky='nsew')
+    outputArea2.tag_add("normal", "0.0", "1000.1000")
+    outputArea2.tag_config("normal", foreground="black")
+
+    outputArea3 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
+    outputArea3.see('end')
+    outputArea3.grid(row=2, column=0, sticky='nsew')
+    outputArea3.tag_add("normal", "0.0", "1000.1000")
+    outputArea3.tag_config("normal", foreground="black")
+
+    outputArea4 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
+    outputArea4.see('end')
+    outputArea4.grid(row=2, column=1, sticky='nsew')
+    outputArea4.tag_add("normal", "0.0", "1.1000")
+    outputArea4.tag_config("normal", foreground="black")
+
+    commandInputArea = Text(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', height=1, fg='black', font=gameFont, background='white')
+    commandInputArea.grid(row=3, column=0, sticky='nsew', columnspan=2)
+
     root.after(0, updateScreen)
     root.mainloop()

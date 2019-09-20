@@ -58,10 +58,9 @@ def updateState(updates, app):
     global itemLocations
     global inventory
     if updates == 'server went down':
-        app.exit()
-        sleep(0.5)
         print('\n\nThe server is down at the moment.', end=' ')
         print('Please wait and come back later.\n\n')
+        app.destroy()
     elif updates['type'] == 'update':
         if 'itemLocations' in updates:
             if 'remove' in updates['itemLocations']:
