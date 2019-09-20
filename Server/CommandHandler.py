@@ -132,7 +132,6 @@ def performCommands(env,
                    clientTimestamp != 0.0:
                     sendFullUpdate = True
                 command['command'] = loads(command['command'][0])
-                print(command['command'])
                 if 'str' in command['command']:
                     if command['command']['str'] == 'disconnect':
                         command['ClientHandler'].transport.abortConnection()
@@ -204,6 +203,7 @@ def performCommands(env,
                         print('item doesn\'t exist.')
 
                 if sendFullUpdate and type(outcome) == dict:
+                    updates = {}
                     update = getCompleteUpdate(command['ClientHandler'],
                                                env,
                                                staticWorldDB,
@@ -211,21 +211,31 @@ def performCommands(env,
                                                itemDB,
                                                itemLocationDB,
                                                inventoryDB)
-                    update['type'] = 'full update'
+                    for item in outcome:
+                        if type(item) == int:
+                            if item == command['ClientHandler'].loggedInAccount:
+                                updates[item] = update
+                                updates[item]['type'] = 'full update'
+                            else:
+                                updates[item] = outcome[item]
+                                updates[item]['type'] = 'update'
+                    print(updates)
                     updateList.append({
                         'ClientHandler': command['ClientHandler'],
-                        'updates': update})
+                        'updates': updates})
 
             mode = 2
 
         while mode == 2:
             while len(updateList) > 0:
-                updates = updateList.pop(0)
-                for update in updates['updates']:
-                    if type(update) == int:
-                        client = users[update]
-                        reactor.callFromThread(client.sendData,
-                                               updates['updates'][update],
-                                               'update')
-                        print('Update sent to account ' + repr(update))
+                try:
+                    updates = updateList.pop(0)
+                finally:
+                    for update in updates['updates']:
+                        if type(update) == int:
+                            client = users[update]
+                            reactor.callFromThread(client.sendData,
+                                                   updates['updates'][update],
+                                                   'update')
+                            print('Update sent to account ' + repr(update))
             mode = 1

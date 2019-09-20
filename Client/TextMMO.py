@@ -18,7 +18,7 @@ isLoggedIn = False
 
 # This will be ran by the thread that handles the screen updates
 def doScreenUpdates():
-    sleep(0.1)
+    sleep(0.5)
     while True:
         if not GameState.screenUpdateQueue.empty():
             screenUpdate = GameState.screenUpdateQueue.get()

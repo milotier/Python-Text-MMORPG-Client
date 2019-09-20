@@ -9,7 +9,6 @@ from passlib.hash import bcrypt
 # TODO: Split database module up into multiple smaller ones?
 # TODO: Make a difference between usernames and characternames
 # TODO: Add some sort of character description
-# TODO: Add an item system
 
 
 # This starts up the lmdb environment and the databases in it
