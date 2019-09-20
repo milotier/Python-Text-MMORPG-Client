@@ -22,7 +22,7 @@ lastReceivedUpdate = 0.0
 def recvall(sock):
     global clientKey
     data = b''
-    bufsize = 4096
+    bufsize = 10000
     while True:
         packet = sock.recv(bufsize)
         data += packet
@@ -63,8 +63,11 @@ def getUpdatesFromServer(updateQueue):
         lastReceivedUpdate = timestamp
         f = Fernet(clientKey)
         data = f.decrypt(data)
-        if type(literal_eval(data.decode())) == dict:
-            updateQueue.put(literal_eval(data.decode()))
+        data = literal_eval(data.decode())
+        if type(data) == list:
+            for update in data:
+                updateQueue.put(update)
+                print(update)
 
 
 # This sends the commands inputted by the user to the server
@@ -79,7 +82,6 @@ def sendCommandToServer(sendingCommand):
     f = Fernet(clientKey)
     sendingCommand = [sendingCommand, lastReceivedUpdate]
     sendingCommand = f.encrypt(bytes(repr(sendingCommand).encode()))
-    #print('sent ' + sendingCommand)
     client.sendall(sendingCommand)
 
 

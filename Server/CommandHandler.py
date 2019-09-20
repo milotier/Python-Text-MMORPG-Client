@@ -4,6 +4,7 @@ from Database import movePlayer, \
                      dropItem, \
                      getCompleteUpdate
 from queue import Queue
+from threading import Lock
 from json import loads
 
 # Here a FIFO queue is made
@@ -12,8 +13,10 @@ global commandQueue
 commandQueue = Queue()
 
 # This is the list of updates that need to be sent to the clients
-global updateList
-updateList = []
+global updateDict
+updateDict = {}
+global updateLock
+updateLock = Lock()
 
 
 # These are the different classes which make up the different commands
@@ -118,7 +121,8 @@ def performCommands(env,
                     reactor,
                     users):
     global commandQueue
-    global updateList
+    global updateDict
+    global updateLock
     mode = 1
     while True:
         while mode == 1:
@@ -131,10 +135,13 @@ def performCommands(env,
                 if abs(serverTimestamp-clientTimestamp) >= 10 and \
                    clientTimestamp != 0.0:
                     sendFullUpdate = True
+                sendFullUpdate = True
                 command['command'] = loads(command['command'][0])
+                disconnected = False
                 if 'str' in command['command']:
                     if command['command']['str'] == 'disconnect':
                         command['ClientHandler'].transport.abortConnection()
+                        disconnected = True
                 else:
                     command['command'] = makeCommand(command['command'])
 
@@ -148,14 +155,16 @@ def performCommands(env,
                         characterLocationDB,
                         itemDB,
                         itemLocationDB)
-                    if type(outcome) == dict:
-                        if not sendFullUpdate:
+                    if type(outcome) == dict and not sendFullUpdate:
+                        with updateLock:
                             for item in outcome:
                                 if type(item) == int:
                                     outcome[item]['type'] = 'update'
-                            updateList.append({
-                                'ClientHandler': command['ClientHandler'],
-                                'updates': outcome})
+                                    if item not in updateDict:
+                                        updateDict[item] = []
+                                        updateDict[item].append(outcome[item])
+                                    else:
+                                        updateDict[item].append(outcome[item])
 
                     elif outcome == 'destination invalid':
                         print('destination invalid')
@@ -170,14 +179,16 @@ def performCommands(env,
                         itemDB,
                         characterDB,
                         characterLocationDB)
-                    if type(outcome) == dict:
-                        if not sendFullUpdate:
+                    if type(outcome) == dict and not sendFullUpdate:
+                        with updateLock:
                             for item in outcome:
                                 if type(item) == int:
                                     outcome[item]['type'] = 'update'
-                            updateList.append({
-                                'ClientHandler': command['ClientHandler'],
-                                'updates': outcome})
+                                    if item not in updateDict:
+                                        updateDict[item] = []
+                                        updateDict[item].append(outcome[item])
+                                    else:
+                                        updateDict[item].append(outcome[item])
                     elif outcome == 'item nonexisting':
                         print('item doesn\'t exist.')
 
@@ -191,51 +202,63 @@ def performCommands(env,
                         itemDB,
                         characterDB,
                         characterLocationDB)
-                    if type(outcome) == dict:
-                        if not sendFullUpdate:
+                    if type(outcome) == dict and not sendFullUpdate:
+                        with updateLock:
                             for item in outcome:
                                 if type(item) == int:
                                     outcome[item]['type'] = 'update'
-                            updateList.append({
-                                'ClientHandler': command['ClientHandler'],
-                                'updates': outcome})
+                                    if item not in updateDict:
+                                        updateDict[item] = []
+                                        updateDict[item].append(outcome[item])
+                                    else:
+                                        updateDict[item].append(outcome[item])
                     elif outcome == 'item nonexisting':
                         print('item doesn\'t exist.')
 
-                if sendFullUpdate and type(outcome) == dict:
-                    updates = {}
-                    update = getCompleteUpdate(command['ClientHandler'],
-                                               env,
-                                               staticWorldDB,
-                                               characterDB,
-                                               itemDB,
-                                               itemLocationDB,
-                                               inventoryDB)
-                    for item in outcome:
-                        if type(item) == int:
-                            if item == command['ClientHandler'].loggedInAccount:
-                                updates[item] = update
-                                updates[item]['type'] = 'full update'
-                            else:
-                                updates[item] = outcome[item]
-                                updates[item]['type'] = 'update'
-                    print(updates)
-                    updateList.append({
-                        'ClientHandler': command['ClientHandler'],
-                        'updates': updates})
+                if not disconnected:
+                    if sendFullUpdate and type(outcome) == dict:
+                        updates = {}
+                        update = getCompleteUpdate(command['ClientHandler'],
+                                                   env,
+                                                   staticWorldDB,
+                                                   characterDB,
+                                                   itemDB,
+                                                   itemLocationDB,
+                                                   inventoryDB)
+                        with updateLock:
+                            for item in outcome:
+                                if type(item) == int:
+                                    if item == command['ClientHandler'].loggedInAccount:
+                                        outcome[item] = update
+                                        outcome[item]['type'] = 'full update'
+                                        if item not in updateDict:
+                                            updateDict[item] = []
+                                            updateDict[item].append(outcome[item])
+                                        else:
+                                            updateDict[item].append(outcome[item])
+                                    else:
+                                        outcome[item]['type'] = 'update'
+                                        if item not in updateDict:
+                                            updateDict[item] = []
+                                            updateDict[item].append(outcome[item])
+                                        else:
+                                            updateDict[item].append(outcome[item])
+                        print(updates)
 
             mode = 2
 
         while mode == 2:
-            while len(updateList) > 0:
-                try:
-                    updates = updateList.pop(0)
-                finally:
-                    for update in updates['updates']:
-                        if type(update) == int:
-                            client = users[update]
-                            reactor.callFromThread(client.sendData,
-                                                   updates['updates'][update],
-                                                   'update')
-                            print('Update sent to account ' + repr(update))
+            while len(updateDict) > 0:
+                with updateLock:
+                    try:
+                        account = next(iter(updateDict))
+                        updates = updateDict.pop(account)
+                    except StopIteration:
+                        account = None
+                if account is not None:
+                    if account in users:
+                        reactor.callFromThread(users[account].sendData,
+                                               updates,
+                                               'update')
+                        print('Update sent to account ' + repr(account))
             mode = 1
