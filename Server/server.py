@@ -13,7 +13,7 @@ from time import time
 
 # Here the port and ip of the server are defined
 port = 5555
-host = ''
+host = '192.168.1.46'
 
 
 # This is the ClientHandler class (A twisted Protocol)
@@ -30,7 +30,7 @@ class ClientHandler(LineReceiver):
         self.lastSentUpdate = 0.0
 
     def connectionMade(self):
-        self.transport.write(self.key)
+        self.sendData(self.key, 'key')
 
     def rawDataReceived(self, command):
         f = Fernet(self.key)
@@ -108,12 +108,17 @@ class ClientHandler(LineReceiver):
         self.transport.abortConnection()
 
     def sendData(self, data, dataType):
-        f = Fernet(self.key)
-        if dataType == 'update':
-            timestamp = time()
-            self.lastSentUpdate = timestamp
-        data = f.encrypt(bytes(repr(data).encode()))
-        self.transport.write(data)
+        if dataType == 'key':
+            deadBeef = b'\xfe\xed\xfa\xce'
+            self.transport.write(data + deadBeef)
+        else:
+            deadBeef = b'\xfe\xed\xfa\xce'
+            f = Fernet(self.key)
+            if dataType == 'update':
+                timestamp = time()
+                self.lastSentUpdate = timestamp
+            data = f.encrypt(bytes(repr(data).encode()))
+            self.transport.write(data + deadBeef)
 
 
 # This is the twisted factory that will make new CientHandlers

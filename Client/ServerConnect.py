@@ -26,9 +26,9 @@ def recvall(sock):
     while True:
         packet = sock.recv(bufsize)
         data += packet
-        if len(packet) < bufsize:
+        if data[-4:] == b'\xfe\xed\xfa\xce':
             break
-    return data
+    return data[0:-4]
 
 
 # This tries to make a connection to the server
@@ -59,6 +59,7 @@ def getUpdatesFromServer(updateQueue):
         if not data:
             updateQueue.put('server went down')
             break
+        print(data)
         timestamp = time()
         lastReceivedUpdate = timestamp
         f = Fernet(clientKey)
@@ -103,6 +104,7 @@ def loginToAccount(accountDetails):
 
 def createAccount(accountDetails):
     global client
+    print(clientKey)
     f = Fernet(clientKey)
     accountDetails.append('create')
     accountDetails = f.encrypt(bytes(repr(accountDetails).encode()))
