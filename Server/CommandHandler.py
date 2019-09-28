@@ -7,6 +7,7 @@ from queue import Queue
 from threading import Lock
 from json import loads
 
+
 # Here a FIFO queue is made
 # that makes sure that a command is only performed once
 global commandQueue
@@ -15,6 +16,7 @@ commandQueue = Queue()
 # This is the list of updates that need to be sent to the clients
 global updateDict
 updateDict = {}
+
 global updateLock
 updateLock = Lock()
 
@@ -59,6 +61,8 @@ class TravelCommand(Command):
         self.direction = Direction(direction,
                                    inputDirection,
                                    directionCommentFactor)
+        self.function = movePlayer
+        self.args = "(command['ClientHandler'],command['command'].direction.direction,env,staticWorldDB,characterDB,characterLocationDB,itemDB,itemLocationDB)"
 
 
 class TakeCommand(Command):
@@ -70,6 +74,8 @@ class TakeCommand(Command):
                          inputVerb,
                          [])
         self.targetItem = Item(itemName)
+        self.function = takeItem
+        self.args = "(command['ClientHandler'],command['command'].targetItem,env,inventoryDB,itemLocationDB,itemDB,characterDB,characterLocationDB)"
 
 
 class DropCommand(Command):
@@ -81,6 +87,8 @@ class DropCommand(Command):
                          inputVerb,
                          [])
         self.targetItem = Item(itemName)
+        self.function = dropItem
+        self.args = "(command['ClientHandler'],command['command'].targetItem,env,inventoryDB,itemLocationDB,itemDB,characterDB,characterLocationDB)"
 
 
 # This will make a command object
@@ -135,7 +143,6 @@ def performCommands(env,
                 if abs(serverTimestamp-clientTimestamp) >= 10 and \
                    clientTimestamp != 0.0:
                     sendFullUpdate = True
-                sendFullUpdate = True
                 command['command'] = loads(command['command'][0])
                 disconnected = False
                 if 'str' in command['command']:
@@ -144,76 +151,18 @@ def performCommands(env,
                         disconnected = True
                 else:
                     command['command'] = makeCommand(command['command'])
-
-                if type(command['command']) == TravelCommand:
-                    outcome = movePlayer(
-                        command['ClientHandler'],
-                        command['command'].direction.direction,
-                        env,
-                        staticWorldDB,
-                        characterDB,
-                        characterLocationDB,
-                        itemDB,
-                        itemLocationDB)
-                    if type(outcome) == dict and not sendFullUpdate:
-                        with updateLock:
-                            for item in outcome:
-                                if type(item) == int:
-                                    outcome[item]['type'] = 'update'
-                                    if item not in updateDict:
-                                        updateDict[item] = []
-                                        updateDict[item].append(outcome[item])
-                                    else:
-                                        updateDict[item].append(outcome[item])
-
-                    elif outcome == 'destination invalid':
-                        print('destination invalid')
-
-                if type(command['command']) == TakeCommand:
-                    outcome = takeItem(
-                        command['ClientHandler'],
-                        command['command'].targetItem,
-                        env,
-                        inventoryDB,
-                        itemLocationDB,
-                        itemDB,
-                        characterDB,
-                        characterLocationDB)
-                    if type(outcome) == dict and not sendFullUpdate:
-                        with updateLock:
-                            for item in outcome:
-                                if type(item) == int:
-                                    outcome[item]['type'] = 'update'
-                                    if item not in updateDict:
-                                        updateDict[item] = []
-                                        updateDict[item].append(outcome[item])
-                                    else:
-                                        updateDict[item].append(outcome[item])
-                    elif outcome == 'item nonexisting':
-                        print('item doesn\'t exist.')
-
-                if type(command['command']) == DropCommand:
-                    outcome = dropItem(
-                        command['ClientHandler'],
-                        command['command'].targetItem,
-                        env,
-                        inventoryDB,
-                        itemLocationDB,
-                        itemDB,
-                        characterDB,
-                        characterLocationDB)
-                    if type(outcome) == dict and not sendFullUpdate:
-                        with updateLock:
-                            for item in outcome:
-                                if type(item) == int:
-                                    outcome[item]['type'] = 'update'
-                                    if item not in updateDict:
-                                        updateDict[item] = []
-                                        updateDict[item].append(outcome[item])
-                                    else:
-                                        updateDict[item].append(outcome[item])
-                    elif outcome == 'item nonexisting':
-                        print('item doesn\'t exist.')
+                    if issubclass(type(command['command']), Command):
+                        outcome = command['command'].function(*eval(command['command'].args))
+                        if type(outcome) == dict and not sendFullUpdate:
+                            with updateLock:
+                                for item in outcome:
+                                    if type(item) == int:
+                                        outcome[item]['type'] = 'update'
+                                        if item not in updateDict:
+                                            updateDict[item] = []
+                                            updateDict[item].append(outcome[item])
+                                        else:
+                                            updateDict[item].append(outcome[item])
 
                 if not disconnected:
                     if sendFullUpdate and type(outcome) == dict:
@@ -243,7 +192,6 @@ def performCommands(env,
                                             updateDict[item].append(outcome[item])
                                         else:
                                             updateDict[item].append(outcome[item])
-                        print(updates)
 
             mode = 2
 
@@ -256,9 +204,11 @@ def performCommands(env,
                     except StopIteration:
                         account = None
                 if account is not None:
-                    if account in users:
+                    try:
                         reactor.callFromThread(users[account].sendData,
                                                updates,
                                                'update')
                         print('Update sent to account ' + repr(account))
+                    except KeyError:
+                        pass
             mode = 1

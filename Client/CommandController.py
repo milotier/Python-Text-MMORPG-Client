@@ -144,7 +144,7 @@ def parseGivenCommand(tokenList):
                 if index > 1:
                     itemName += ' ' + token['input']
                 index += 1
-        
+
         elif verb['verbType'] == 'pick' and tokenList[1]['type'] == 'keyword':
             if tokenList[1]['keyword'] == 'up':
                 index = 2
@@ -161,7 +161,7 @@ def parseGivenCommand(tokenList):
                     if index > 2:
                         itemName += ' ' + token['input']
                     index += 1
-        
+
         elif verb['verbType'] == 'drop':
             index = 1
             itemName = ''

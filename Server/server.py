@@ -8,11 +8,13 @@ import lmdb
 from ast import literal_eval
 from cryptography.fernet import Fernet
 from time import time
+from socket import gethostname
 
 # The server module (needless to say)
 
 # Here the port and ip of the server are defined
 port = 5555
+#host = gethostname()
 host = '192.168.1.46'
 
 
@@ -102,15 +104,15 @@ class ClientHandler(LineReceiver):
                             self.sendData('username already exists', 'message')
 
     def connectionLost(self, reason):
-        print('Connection lost.')
         if self.loggedInAccount is not None:
+            print('Connection lost with ' + repr(self.loggedInAccount))
             self.users.pop(self.loggedInAccount)
         self.transport.abortConnection()
 
     def sendData(self, data, dataType):
         if dataType == 'key':
             deadBeef = b'\xfe\xed\xfa\xce'
-            self.transport.write(data + deadBeef)
+            self.transport.write(bytes(data.encode()) if type(data) != bytes else data + deadBeef)
         else:
             deadBeef = b'\xfe\xed\xfa\xce'
             f = Fernet(self.key)

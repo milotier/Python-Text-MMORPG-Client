@@ -5,11 +5,13 @@ from sys import exit
 import GameState
 from getpass import getpass
 import MainGameScreen
+from socket import gethostbyname
 
 # The main module which starts all the different threads
 # and the application's eventloop
 
 # The ip and port of the server
+#host = gethostbyname('MacBook-Pro.local')
 host = '192.168.1.46'
 port = 5555
 

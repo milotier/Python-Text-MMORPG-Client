@@ -18,17 +18,44 @@ clientKey = ''
 global lastReceivedUpdate
 lastReceivedUpdate = 0.0
 
+global lookingFor
+lookingFor = 254
+
+global commandBuffer
+commandBuffer = bytearray(b'')
+
+
+def splitUp(update):
+    global lookingFor
+    global commandBuffer
+    returnValue = None
+    for byte in update:
+        if byte == 254 and lookingFor == 254:
+            lookingFor = 237
+        elif byte == 237 and lookingFor == 237:
+            lookingFor = 250
+        elif byte == 250 and lookingFor == 250:
+            lookingFor = 206
+        elif byte == 206 and lookingFor == 206:
+            lookingFor = 254
+            returnValue = bytes(commandBuffer)
+            commandBuffer = bytearray(b'')
+        else:
+            commandBuffer.append(byte)
+    return returnValue
+
 
 def recvall(sock):
     global clientKey
-    data = b''
     bufsize = 10000
     while True:
         packet = sock.recv(bufsize)
-        data += packet
-        if data[-4:] == b'\xfe\xed\xfa\xce':
-            break
-    return data[0:-4]
+        update = splitUp(packet)
+        if update is not None:
+            return update
+        elif not packet:
+            print(packet)
+            return packet
 
 
 # This tries to make a connection to the server
@@ -59,7 +86,6 @@ def getUpdatesFromServer(updateQueue):
         if not data:
             updateQueue.put('server went down')
             break
-        print(data)
         timestamp = time()
         lastReceivedUpdate = timestamp
         f = Fernet(clientKey)
@@ -68,7 +94,6 @@ def getUpdatesFromServer(updateQueue):
         if type(data) == list:
             for update in data:
                 updateQueue.put(update)
-                print(update)
 
 
 # This sends the commands inputted by the user to the server
@@ -104,7 +129,6 @@ def loginToAccount(accountDetails):
 
 def createAccount(accountDetails):
     global client
-    print(clientKey)
     f = Fernet(clientKey)
     accountDetails.append('create')
     accountDetails = f.encrypt(bytes(repr(accountDetails).encode()))
