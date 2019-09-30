@@ -14,8 +14,8 @@ from socket import gethostname
 
 # Here the port and ip of the server are defined
 port = 5555
-#host = gethostname()
-host = '192.168.1.46'
+host = gethostname()
+#host = '192.168.1.46'
 
 
 # This is the ClientHandler class (A twisted Protocol)
@@ -51,16 +51,26 @@ class ClientHandler(LineReceiver):
                                                                 env,
                                                                 loginDB)
                     if type(detailsMatch) == int:
+                        self.otherClientConnected = False
                         if detailsMatch in self.users:
                             self.users[detailsMatch].loggedInAccount = None
                             self.users[detailsMatch].transport.loseConnection()
+                            self.otherClientConnected = True
                         self.isLoggedIn = True
                         self.loggedInAccount = detailsMatch
                         self.users[detailsMatch] = self
+                        if not self.otherClientConnected:
+                            Database.login(self,
+                                           env,
+                                           characterDB,
+                                           characterLocationDB,
+                                           CommandHandler.updateDict,
+                                           CommandHandler.updateLock)
                         update = Database.getCompleteUpdate(self,
                                                             env,
                                                             staticWorldDB,
                                                             characterDB,
+                                                            characterLocationDB,
                                                             itemDB,
                                                             itemLocationDB,
                                                             inventoryDB)
@@ -70,49 +80,53 @@ class ClientHandler(LineReceiver):
                         self.sendData('no match found', 'message')
 
                 else:
-                    passwordIsStrongEnough = Database.checkPasswordStrength(command[1])
-                    usernameAlreadyExists = Database.checkUsername(command[0],
-                                                                   env,
-                                                                   loginDB)
-                    if passwordIsStrongEnough and not usernameAlreadyExists:
-                        accountID = Database.createAccount(command[0],
-                                                           command[1],
-                                                           env,
-                                                           loginDB,
-                                                           characterDB,
-                                                           characterLocationDB,
-                                                           accountDB,
-                                                           inventoryDB)
+                    outcome = Database.createAccount(command[0],
+                                                     command[1],
+                                                     env,
+                                                     loginDB,
+                                                     characterDB,
+                                                     characterLocationDB,
+                                                     accountDB,
+                                                     inventoryDB)
+                    if type(outcome) == int:
                         self.isLoggedIn = True
-                        self.loggedInAccount = accountID
-                        self.users[accountID] = self
+                        self.loggedInAccount = outcome
+                        self.users[outcome] = self
+                        Database.login(self,
+                                       env,
+                                       characterDB,
+                                       characterLocationDB,
+                                       CommandHandler.updateDict,
+                                       CommandHandler.updateLock)
                         update = Database.getCompleteUpdate(self,
                                                             env,
                                                             staticWorldDB,
                                                             characterDB,
+                                                            characterLocationDB,
                                                             itemDB,
                                                             itemLocationDB,
                                                             inventoryDB)
                         update['type'] = 'full update'
                         self.sendData(update, 'update')
-                    else:
-                        if not passwordIsStrongEnough:
-                            self.sendData('password too weak', 'message')
-                        elif type(usernameAlreadyExists) == str:
-                            self.sendData(usernameAlreadyExists, 'message')
-                        elif usernameAlreadyExists:
-                            self.sendData('username already exists', 'message')
+                    elif type(outcome) == str:
+                        self.sendData(outcome, 'message')
 
     def connectionLost(self, reason):
         if self.loggedInAccount is not None:
-            print('Connection lost with ' + repr(self.loggedInAccount))
+            print('Connection lost with account ' + repr(self.loggedInAccount))
+            Database.logout(self,
+                            env,
+                            characterDB,
+                            characterLocationDB,
+                            CommandHandler.updateDict,
+                            CommandHandler.updateLock)
             self.users.pop(self.loggedInAccount)
         self.transport.abortConnection()
 
     def sendData(self, data, dataType):
         if dataType == 'key':
             deadBeef = b'\xfe\xed\xfa\xce'
-            self.transport.write(bytes(data.encode()) if type(data) != bytes else data + deadBeef)
+            self.transport.write(bytes(data + deadBeef))
         else:
             deadBeef = b'\xfe\xed\xfa\xce'
             f = Fernet(self.key)
@@ -123,7 +137,7 @@ class ClientHandler(LineReceiver):
             self.transport.write(data + deadBeef)
 
 
-# This is the twisted factory that will make new CientHandlers
+# This is the twisted factory that will make new ClientHandlers
 class Server(Factory):
 
     def __init__(self):

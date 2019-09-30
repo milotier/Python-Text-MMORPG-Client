@@ -52,10 +52,10 @@ for field in staticWorld:
 txn.commit()
 
 items = {
-    pack('I', 0): {'name': 'test item', 'ID': 0},
-    pack('I', 1): {'name': 'test item 2', 'ID': 1},
-    pack('I', 2): {'name': 'test item 3', 'ID': 2},
-    pack('I', 3): {'name': 'test item 4', 'ID': 3}
+    pack('I', 0): {'name': 'test item'},
+    pack('I', 1): {'name': 'test item 2'},
+    pack('I', 2): {'name': 'test item 3'},
+    pack('I', 3): {'name': 'test item 4'}
 }
 
 itemLocations = {

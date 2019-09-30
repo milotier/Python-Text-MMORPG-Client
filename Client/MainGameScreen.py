@@ -82,7 +82,9 @@ updateQueue = Queue()
 def updateScreen():
     if not updateQueue.empty():
         screenUpdate = updateQueue.get()
-        if 'staticFields' in screenUpdate or 'itemLocations' in screenUpdate:
+        if 'staticFields' in screenUpdate or \
+           'itemLocations' in screenUpdate or \
+           'characterLocations' in screenUpdate:
             if GameState.outputArea1Function == 'areaDescriptionWindow':
                 outputArea1.delete('1.0', 'end')
                 outputArea1.insert('end', GameState.areaDescriptionWindowText)

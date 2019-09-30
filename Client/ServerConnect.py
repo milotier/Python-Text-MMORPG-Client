@@ -54,7 +54,6 @@ def recvall(sock):
         if update is not None:
             return update
         elif not packet:
-            print(packet)
             return packet
 
 

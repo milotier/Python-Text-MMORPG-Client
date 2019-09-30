@@ -1,5 +1,4 @@
 from queue import Queue
-from time import sleep
 
 # The module which saves the game state and updates it
 # TODO: Save more types of data in the GameState module:
@@ -36,6 +35,8 @@ global area
 area = {}
 global itemLocations
 itemLocations = {}
+global characterLocations
+characterLocations = {}
 
 # This defines the queue object
 # that will order the different updates of the screen as FIFO (FirstInFirstOut)
@@ -56,6 +57,7 @@ def updateState(updates, app):
     global area
     global playerLocation
     global itemLocations
+    global characterLocations
     global inventory
     if updates == 'server went down':
         print('\n\nThe server is down at the moment.', end=' ')
@@ -69,6 +71,14 @@ def updateState(updates, app):
             if 'update' in updates['itemLocations']:
                 for update in updates['itemLocations']['update']:
                     itemLocations[update] = updates['itemLocations']['update'][update]
+
+        if 'characterLocations' in updates:
+            if 'remove' in updates['characterLocations']:
+                for removal in updates['characterLocations']['remove']:
+                    characterLocations.pop(removal, None)
+            if 'update' in updates['characterLocations']:
+                for update in updates['characterLocations']['update']:
+                    characterLocations[update] = updates['characterLocations']['update'][update]
 
         if 'staticFields' in updates:
             if 'remove' in updates['staticFields']:
@@ -95,7 +105,9 @@ def updateState(updates, app):
             else:
                 inventoryWindowText = 'You aren\'t carrying anything right now.'
 
-        if 'staticFields' in updates or 'itemLocations' in updates:
+        if 'staticFields' in updates or \
+           'itemLocations' in updates or \
+           'characterLocations' in updates:
             areaDescriptionWindowText = ''
             characterLocationString = ''
             for field in area:
@@ -106,6 +118,12 @@ def updateState(updates, app):
             for field in area:
                 if field == characterLocationString:
                     areaDescriptionWindowText += area[field]['description'] + '\n\n'
+            if len(characterLocations[characterLocationString]) == 0:
+                areaDescriptionWindowText += 'There are no other players here.\n\n'
+            elif len(characterLocations[characterLocationString]) == 1:
+                areaDescriptionWindowText += 'There is 1 other player here.\n\n'
+            else:
+                areaDescriptionWindowText += 'There are ' + repr(len(characterLocations[characterLocationString])) + ' other players here.\n\n'
 
             for field in itemLocations:
                 if field == characterLocationString:
@@ -125,7 +143,7 @@ def updateState(updates, app):
                             areaDescriptionWindowText += ' and ' + itemName + ' lying on the ground.\n\n'
 
                         iteration += 1
-            
+
             for field in area:
                 if field != characterLocationString:
                     fieldLocation = field.split(' ')
@@ -207,18 +225,27 @@ def updateState(updates, app):
                         areaDescriptionWindowText += 'To the southwest you see ' + \
                                                     area[field]['summary'] + \
                                                     '\n'
-        
 
     elif updates['type'] == 'full update':
         area = {}
         playerLocation = {}
+        characterLocations = {}
+        itemLocations = {}
         for update in updates['staticFields']['update']:
             area[update] = updates['staticFields']['update'][update]
         areaDescriptionWindowText = ''
         for field in area:
             if field == updates['characterLocation']:
                 areaDescriptionWindowText += area[field]['description'] + '\n\n'
-        itemLocations = {}
+        for update in updates['characterLocations']['update']:
+            characterLocations[update] = updates['characterLocations']['update'][update]
+        print(characterLocations)
+        if len(characterLocations[updates['characterLocation']]) == 0:
+            areaDescriptionWindowText += 'There are no other players here.\n\n'
+        elif len(characterLocations[updates['characterLocation']]) == 1:
+            areaDescriptionWindowText += 'There is 1 other player here.\n\n'
+        else:
+            areaDescriptionWindowText += 'There are ' + repr(len(characterLocations[updates['characterLocation']])) + ' other players here.\n\n'
         for update in updates['itemLocations']['update']:
             itemLocations[update] = updates['itemLocations']['update'][update]
         for field in itemLocations:
@@ -331,4 +358,4 @@ def updateState(updates, app):
             for item in inventory:
                 inventoryWindowText += '    a ' + item['name'] + '\n'
         else:
-            inventoryWindowText = 'You aren\'t carrying anything right now.'
+            inventoryWindowText = 'Your inventory is empty.'

@@ -140,7 +140,7 @@ def performCommands(env,
                 clientTimestamp = command['command'][1]
                 serverTimestamp = command['ClientHandler'].lastSentUpdate
                 sendFullUpdate = False
-                if abs(serverTimestamp-clientTimestamp) >= 10 and \
+                if abs(serverTimestamp-clientTimestamp) >= 5 and \
                    clientTimestamp != 0.0:
                     sendFullUpdate = True
                 command['command'] = loads(command['command'][0])
@@ -171,6 +171,7 @@ def performCommands(env,
                                                    env,
                                                    staticWorldDB,
                                                    characterDB,
+                                                   characterLocationDB,
                                                    itemDB,
                                                    itemLocationDB,
                                                    inventoryDB)

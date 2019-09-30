@@ -11,8 +11,8 @@ from socket import gethostbyname
 # and the application's eventloop
 
 # The ip and port of the server
-#host = gethostbyname('MacBook-Pro.local')
-host = '192.168.1.46'
+host = gethostbyname('MacBook-Pro.local')
+#host = '192.168.1.46'
 port = 5555
 
 isLoggedIn = False
