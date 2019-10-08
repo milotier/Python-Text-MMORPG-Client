@@ -239,7 +239,6 @@ def updateState(updates, app):
                 areaDescriptionWindowText += area[field]['description'] + '\n\n'
         for update in updates['characterLocations']['update']:
             characterLocations[update] = updates['characterLocations']['update'][update]
-        print(characterLocations)
         if len(characterLocations[updates['characterLocation']]) == 0:
             areaDescriptionWindowText += 'There are no other players here.\n\n'
         elif len(characterLocations[updates['characterLocation']]) == 1:

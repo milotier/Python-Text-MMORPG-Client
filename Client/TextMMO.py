@@ -5,17 +5,33 @@ from sys import exit
 import GameState
 from getpass import getpass
 import MainGameScreen
-from socket import gethostbyname
+import json
 
 # The main module which starts all the different threads
 # and the application's eventloop
 
-# The ip and port of the server
-host = gethostbyname('MacBook-Pro.local')
-#host = '192.168.1.46'
-port = 5555
+# Here the IP and port of the server will be read from the config file
+with open('config.json') as configData:
+    config = json.load(configData)
+if 'IP' in config:
+    host = config['IP']
+else:
+    print('\n\n')
+    print('IP address of server could not be found in the config file.', end=' ')
+    print('Please make sure you specify an IP adress to connect to.')
+    print('\n\n')
+    exit()
+if 'port' in config:
+    port = config['port']
+else:
+    print('\n\n')
+    print('Port of server could not be found in the config file.', end=' ')
+    print('Please make sure you specify a port to use.')
+    print('\n\n')
+    exit()
 
-isLoggedIn = False
+# This is the client's version. If you change this, errors might appear
+version = '0.1.0'
 
 
 # This will be ran by the thread that handles the screen updates
@@ -52,7 +68,9 @@ def startGame():
 # TODO: Replace input prompts with login screen
 def login(iteration):
     if iteration == 'first':
-        connectionOutcome = ServerConnect.connectToServer(host, port)
+        connectionOutcome = ServerConnect.connectToServer(host, port, version)
+        if connectionOutcome == 'successfull connection':
+            print('\nYou have been succesfully connected to the server.\n')
     else:
         connectionOutcome = 'successfull connection'
     tryAgain = False
@@ -94,12 +112,19 @@ def login(iteration):
                 else:
                     GameState.screenUpdateQueue.put(creationOutcome)
                 validAnswer = True
+    elif connectionOutcome == 'version invalid':
+        print('\n\n')
+        print('A new version of this game is available on Github.', end=' ')
+        print('Please download the new version at https://github.com/milotier/Python-Text-MMORPG to continue playing.')
+        print('\n\n')
+        exit()
     else:
-        print('\n\nFailed to connect to the server.', end=' ')
-        print('Please check your internet connection.', end=' ')
-        print('If your internet connection is okay,', end=' ')
-        print('it probably means the server is down', end=' ')
-        print('and you should wait for a while.\n\n')
+        print('\n\n')
+        print('Failed to connect to the server. This can mean a few things:')
+        print('    -You don\'t have a good internet connection')
+        print('    -The server you\'re trying to connect to is currently down')
+        print('    -The IP or port specified in the config file are invalid')
+        print('\n\n')
         exit()
 
     return tryAgain

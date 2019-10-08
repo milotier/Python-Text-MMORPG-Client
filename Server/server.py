@@ -2,20 +2,50 @@ from threading import Thread
 import CommandHandler
 import Database
 from twisted.internet.protocol import Factory
+from twisted.internet.error import CannotListenError
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
 import lmdb
 from ast import literal_eval
 from cryptography.fernet import Fernet
 from time import time
-from socket import gethostname
+import json
+from sys import exit
 
 # The server module (needless to say)
 
-# Here the port and ip of the server are defined
-port = 5555
-host = gethostname()
-#host = '192.168.1.46'
+
+# Here the port and ip of the server will be read from the config file
+with open('config.json') as configData:
+    config = json.load(configData)
+if 'IP' in config:
+    host = config['IP']
+else:
+    print('\n\n')
+    print('IP address of server could not be found in the config file.', end=' ')
+    print('Please make sure you specify an IP adress for the server.')
+    print('\n\n')
+    exit()
+if 'port' in config:
+    port = config['port']
+else:
+    print('\n\n')
+    print('Port of server could not be found in the config file.', end=' ')
+    print('Please make sure you specify a port for the server.')
+    print('\n\n')
+    exit()
+if 'starting location' not in config or config['starting location'] == []:
+    print('\n\n')
+    print('No starting location for new accounts has been found in the config file.', end=' ')
+    print('Please make sure to include a starting location.')
+    print('\n\n')
+    exit()
+if 'required version' not in config or config['required version'] == '':
+    print('\n\n')
+    print('No required version for clients has been found in the config file.', end=' ')
+    print('Please make sure to include a required version.')
+    print('\n\n')
+    exit()
 
 
 # This is the ClientHandler class (A twisted Protocol)
@@ -27,6 +57,7 @@ class ClientHandler(LineReceiver):
         self.users = users
         self.setRawMode()
         self.key = Fernet.generate_key()
+        self.waitingForVersion = True
         self.isLoggedIn = False
         self.loggedInAccount = None
         self.lastSentUpdate = 0.0
@@ -35,81 +66,99 @@ class ClientHandler(LineReceiver):
         self.sendData(self.key, 'key')
 
     def rawDataReceived(self, command):
-        f = Fernet(self.key)
-        command = f.decrypt(command).decode()
-        command = literal_eval(command)
-        if self.isLoggedIn:
-            global commandQueue
-            CommandHandler.commandQueue.put({'command': command,
-                                             'ClientHandler': self})
-        else:
-            if type(command) == list:
-                if 'create' not in command:
-                    detailsMatch = Database.checkAccountDetails(self,
-                                                                command[0],
-                                                                command[1],
-                                                                env,
-                                                                loginDB)
-                    if type(detailsMatch) == int:
-                        self.otherClientConnected = False
-                        if detailsMatch in self.users:
-                            self.users[detailsMatch].loggedInAccount = None
-                            self.users[detailsMatch].transport.loseConnection()
-                            self.otherClientConnected = True
-                        self.isLoggedIn = True
-                        self.loggedInAccount = detailsMatch
-                        self.users[detailsMatch] = self
-                        if not self.otherClientConnected:
-                            Database.login(self,
-                                           env,
-                                           characterDB,
-                                           characterLocationDB,
-                                           CommandHandler.updateDict,
-                                           CommandHandler.updateLock)
-                        update = Database.getCompleteUpdate(self,
-                                                            env,
-                                                            staticWorldDB,
-                                                            characterDB,
-                                                            characterLocationDB,
-                                                            itemDB,
-                                                            itemLocationDB,
-                                                            inventoryDB)
-                        update['type'] = 'full update'
-                        self.sendData(update, 'update')
-                    else:
-                        self.sendData('no match found', 'message')
+        if self.waitingForVersion:
+            command = command.decode()
+            with open('config.json') as configData:
+                config = json.load(configData)
+            if command == config['required version']:
+                self.waitingForVersion = False
+                self.sendData('version correct', 'message')
+                return
+            else:
+                self.sendData('version invalid', 'message')
+                self.transport.loseConnection()
+                return
+        try:
+            f = Fernet(self.key)
+            command = f.decrypt(command).decode()
+            command = literal_eval(command)
+        finally:
+            if self.isLoggedIn:
+                global commandQueue
+                CommandHandler.commandQueue.put({'command': command,
+                                                'ClientHandler': self})
+            else:
+                if type(command) == list:
+                    if 'create' not in command:
+                        try:
+                            detailsMatch = Database.checkAccountDetails(self,
+                                                                        command[0],
+                                                                        command[1],
+                                                                        env,
+                                                                        loginDB)
+                        finally:
+                            if type(detailsMatch) == int:
+                                self.otherClientConnected = False
+                                if detailsMatch in self.users:
+                                    self.users[detailsMatch].loggedInAccount = None
+                                    self.users[detailsMatch].transport.loseConnection()
+                                    self.otherClientConnected = True
+                                self.isLoggedIn = True
+                                self.loggedInAccount = detailsMatch
+                                self.users[detailsMatch] = self
+                                if not self.otherClientConnected:
+                                    Database.login(self,
+                                                   env,
+                                                   characterDB,
+                                                   characterLocationDB,
+                                                   CommandHandler.updateDict,
+                                                   CommandHandler.updateLock)
+                                update = Database.getCompleteUpdate(self,
+                                                                    env,
+                                                                    staticWorldDB,
+                                                                    characterDB,
+                                                                    characterLocationDB,
+                                                                    itemDB,
+                                                                    itemLocationDB,
+                                                                    inventoryDB)
+                                update['type'] = 'full update'
+                                self.sendData(update, 'update')
+                            else:
+                                self.sendData('no match found', 'message')
 
-                else:
-                    outcome = Database.createAccount(command[0],
-                                                     command[1],
-                                                     env,
-                                                     loginDB,
-                                                     characterDB,
-                                                     characterLocationDB,
-                                                     accountDB,
-                                                     inventoryDB)
-                    if type(outcome) == int:
-                        self.isLoggedIn = True
-                        self.loggedInAccount = outcome
-                        self.users[outcome] = self
-                        Database.login(self,
-                                       env,
-                                       characterDB,
-                                       characterLocationDB,
-                                       CommandHandler.updateDict,
-                                       CommandHandler.updateLock)
-                        update = Database.getCompleteUpdate(self,
-                                                            env,
-                                                            staticWorldDB,
-                                                            characterDB,
-                                                            characterLocationDB,
-                                                            itemDB,
-                                                            itemLocationDB,
-                                                            inventoryDB)
-                        update['type'] = 'full update'
-                        self.sendData(update, 'update')
-                    elif type(outcome) == str:
-                        self.sendData(outcome, 'message')
+                    else:
+                        try:
+                            outcome = Database.createAccount(command[0],
+                                                             command[1],
+                                                             env,
+                                                             loginDB,
+                                                             characterDB,
+                                                             characterLocationDB,
+                                                             accountDB,
+                                                             inventoryDB)
+                        finally:
+                            if type(outcome) == int:
+                                self.isLoggedIn = True
+                                self.loggedInAccount = outcome
+                                self.users[outcome] = self
+                                Database.login(self,
+                                               env,
+                                               characterDB,
+                                               characterLocationDB,
+                                               CommandHandler.updateDict,
+                                               CommandHandler.updateLock)
+                                update = Database.getCompleteUpdate(self,
+                                                                    env,
+                                                                    staticWorldDB,
+                                                                    characterDB,
+                                                                    characterLocationDB,
+                                                                    itemDB,
+                                                                    itemLocationDB,
+                                                                    inventoryDB)
+                                update['type'] = 'full update'
+                                self.sendData(update, 'update')
+                            elif type(outcome) == str:
+                                self.sendData(outcome, 'message')
 
     def connectionLost(self, reason):
         if self.loggedInAccount is not None:
@@ -215,5 +264,18 @@ commandPerformingThread4.start()
 
 # This will run the server on the specified ip and port
 # and run the twisted eventloop
-reactor.listenTCP(port, server, interface=host)
+try:
+    reactor.listenTCP(port, server, interface=host)
+except CannotListenError:
+    print('\n\n')
+    print('Could not run server on the specified IP adress.', end=' ')
+    print('Please make sure to specify a valid IP adress in the config file')
+    print('\n\n')
+    exit()
+except OverflowError:
+    print('\n\n')
+    print('Port of server must be between 0 and 65535.', end=' ')
+    print('Please make sure the port specified in the config file is between those numbers.')
+    print('\n\n')
+    exit()
 reactor.run()

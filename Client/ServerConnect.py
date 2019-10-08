@@ -58,21 +58,36 @@ def recvall(sock):
 
 
 # This tries to make a connection to the server
-def connectToServer(host, port):
+def connectToServer(host, port, version):
     global client
     global clientKey
     try:
         client.connect((host, port))
-        connectionResult = recvall(client)
-        if type(connectionResult) == bytes:
-            clientKey = connectionResult
-            return 'successfull connection'
-        if not connectionResult:
+        key = recvall(client)
+        if type(key) == bytes:
+            clientKey = key
+            client.sendall(bytes(version.encode()))
+            connectionResult = recvall(client)
+            if type(connectionResult) == bytes:
+                f = Fernet(clientKey)
+                connectionResult = f.decrypt(connectionResult)
+                connectionResult = literal_eval(connectionResult.decode())
+                if connectionResult == 'version correct':
+                    return 'successfull connection'
+                else:
+                    return 'version invalid'
+            if not connectionResult:
+                return 'connection failed'
+            else:
+                return 'connection failed'
+        if not key:
             return 'connection failed'
         else:
             return 'connection failed'
 
     except ConnectionRefusedError:
+        return 'connection failed'
+    except OSError:
         return 'connection failed'
 
 
