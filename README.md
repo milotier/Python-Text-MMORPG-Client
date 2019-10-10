@@ -1,4 +1,4 @@
-# Python-Text-MMORPG
+# Python-Text-MMORPG-Client
 
 Firstly, make sure that Python and pip3 are installed on your computer. You will need pip3 to install the required libraries.
 
