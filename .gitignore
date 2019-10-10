@@ -1,7 +1,5 @@
 
 *.pyc
-Client/history.txt
-Server/GameDatabase
 .DS_Store
 .vscode
 MMORPG.code-workspace

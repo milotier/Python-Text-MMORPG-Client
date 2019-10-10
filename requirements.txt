@@ -1,5 +1,1 @@
-twisted
-lmdb
 cryptography
-passlib
-bcrypt
