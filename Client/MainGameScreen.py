@@ -80,58 +80,62 @@ updateQueue = Queue()
 
 
 def updateScreen():
-    if not updateQueue.empty():
-        screenUpdate = updateQueue.get()
-        if 'staticFields' in screenUpdate or \
-           'itemLocations' in screenUpdate or \
-           'characterLocations' in screenUpdate:
-            if GameState.outputArea1Function == 'areaDescriptionWindow':
-                outputArea1.delete('1.0', 'end')
-                outputArea1.insert('end', GameState.areaDescriptionWindowText)
-                if outputArea1.bbox('end-1c') is not None:
-                    outputArea1.see('end')
-            if GameState.outputArea2Function == 'areaDescriptionWindow':
-                outputArea2.delete('1.0', 'end')
-                outputArea2.insert('end', GameState.areaDescriptionWindowText)
-                if outputArea2.bbox('end-1c') is not None:
-                    outputArea2.see('end')
-            if GameState.outputArea3Function == 'areaDescriptionWindow':
-                outputArea3.delete('1.0', 'end')
-                outputArea3.insert('end', GameState.areaDescriptionWindowText)
-                if outputArea3.bbox('end-1c') is not None:
-                    outputArea3.see('end')
-            if GameState.outputArea4Function == 'areaDescriptionWindow':
-                outputArea4.delete('1.0', 'end')
-                outputArea4.insert('end', GameState.areaDescriptionWindowText)
-                if outputArea4.bbox('end-1c') is not None:
-                    outputArea4.see('end')
-        if 'staticFields' in screenUpdate:
-            topWindow1.delete('1.0', 'end')
-            topWindow1.insert('end', GameState.playerLocation['name'])
-            if topWindow1.bbox('end-1c') is not None:
-                topWindow1.see('end')
-        if 'inventory' in screenUpdate:
-            if GameState.outputArea1Function == 'inventoryWindow':
-                outputArea1.delete('1.0', 'end')
-                outputArea1.insert('end', GameState.inventoryWindowText)
-                if outputArea1.bbox('end-1c') is not None:
-                    outputArea1.see('end')
-            if GameState.outputArea2Function == 'inventoryWindow':
-                outputArea2.delete('1.0', 'end')
-                outputArea2.insert('end', GameState.inventoryWindowText)
-                if outputArea2.bbox('end-1c') is not None:
-                    outputArea2.see('end')
-            if GameState.outputArea3Function == 'inventoryWindow':
-                outputArea3.delete('1.0', 'end')
-                outputArea3.insert('end', GameState.inventoryWindowText)
-                if outputArea3.bbox('end-1c') is not None:
-                    outputArea3.see('end')
-            if GameState.outputArea4Function == 'inventoryWindow':
-                outputArea4.delete('1.0', 'end')
-                outputArea4.insert('end', GameState.inventoryWindowText)
-                if outputArea4.bbox('end-1c') is not None:
-                    outputArea4.see('end')
-    root.after(100, updateScreen)
+    try:
+        if not updateQueue.empty():
+            screenUpdate = updateQueue.get()
+            if 'staticFields' in screenUpdate or \
+               'itemLocations' in screenUpdate or \
+               'characterLocations' in screenUpdate:
+                if GameState.outputArea1Function == 'areaDescriptionWindow':
+                    outputArea1.delete('1.0', 'end')
+                    outputArea1.insert('end', GameState.areaDescriptionWindowText)
+                    if outputArea1.bbox('end-1c') is not None:
+                        outputArea1.see('end')
+                if GameState.outputArea2Function == 'areaDescriptionWindow':
+                    outputArea2.delete('1.0', 'end')
+                    outputArea2.insert('end', GameState.areaDescriptionWindowText)
+                    if outputArea2.bbox('end-1c') is not None:
+                        outputArea2.see('end')
+                if GameState.outputArea3Function == 'areaDescriptionWindow':
+                    outputArea3.delete('1.0', 'end')
+                    outputArea3.insert('end', GameState.areaDescriptionWindowText)
+                    if outputArea3.bbox('end-1c') is not None:
+                        outputArea3.see('end')
+                if GameState.outputArea4Function == 'areaDescriptionWindow':
+                    outputArea4.delete('1.0', 'end')
+                    outputArea4.insert('end', GameState.areaDescriptionWindowText)
+                    if outputArea4.bbox('end-1c') is not None:
+                        outputArea4.see('end')
+            if 'staticFields' in screenUpdate:
+                topWindow1.delete('1.0', 'end')
+                topWindow1.insert('end', GameState.playerLocation['name'])
+                if topWindow1.bbox('end-1c') is not None:
+                    topWindow1.see('end')
+            if 'inventory' in screenUpdate:
+                if GameState.outputArea1Function == 'inventoryWindow':
+                    outputArea1.delete('1.0', 'end')
+                    outputArea1.insert('end', GameState.inventoryWindowText)
+                    if outputArea1.bbox('end-1c') is not None:
+                        outputArea1.see('end')
+                if GameState.outputArea2Function == 'inventoryWindow':
+                    outputArea2.delete('1.0', 'end')
+                    outputArea2.insert('end', GameState.inventoryWindowText)
+                    if outputArea2.bbox('end-1c') is not None:
+                        outputArea2.see('end')
+                if GameState.outputArea3Function == 'inventoryWindow':
+                    outputArea3.delete('1.0', 'end')
+                    outputArea3.insert('end', GameState.inventoryWindowText)
+                    if outputArea3.bbox('end-1c') is not None:
+                        outputArea3.see('end')
+                if GameState.outputArea4Function == 'inventoryWindow':
+                    outputArea4.delete('1.0', 'end')
+                    outputArea4.insert('end', GameState.inventoryWindowText)
+                    if outputArea4.bbox('end-1c') is not None:
+                        outputArea4.see('end')
+    except KeyError:
+        updateQueue.put(screenUpdate)
+    finally:
+        root.after(100, updateScreen)
 
 
 def runMainloop():

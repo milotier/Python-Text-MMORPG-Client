@@ -145,14 +145,16 @@ def login(clientHandler,
                                                     characterDB,
                                                     characterLocationDB,
                                                     getValues=False)
-    characterLocationString = repr(characterLocation[0]) + ' ' + \
-                              repr(characterLocation[1]) + ' ' + \
-                              repr(characterLocation[2])
+    characterLocationString = \
+        repr(characterLocation[0]) + ' ' + \
+        repr(characterLocation[1]) + ' ' + \
+        repr(characterLocation[2])
     characterLocationField.append(accountID)
     cursor = txn.cursor(db=characterLocationDB)
-    cursor.put(pack('III', characterLocation[0],
-                           characterLocation[1],
-                           characterLocation[2]),
+    cursor.put(pack('III',
+                    characterLocation[0],
+                    characterLocation[1],
+                    characterLocation[2]),
                bytes(repr(characterLocationField).encode()))
     cursor.close()
     updatedCharacterLocationField = getPlayerLocationField(clientHandler,
@@ -201,14 +203,16 @@ def logout(clientHandler,
                                                     characterDB,
                                                     characterLocationDB,
                                                     getValues=False)
-    characterLocationString = repr(characterLocation[0]) + ' ' + \
-                              repr(characterLocation[1]) + ' ' + \
-                              repr(characterLocation[2])
+    characterLocationString =  \
+        repr(characterLocation[0]) + ' ' + \
+        repr(characterLocation[1]) + ' ' + \
+        repr(characterLocation[2])
     characterLocationField.remove(accountID)
     cursor = txn.cursor(db=characterLocationDB)
-    cursor.put(pack('III', characterLocation[0],
-                           characterLocation[1],
-                           characterLocation[2]),
+    cursor.put(pack('III',
+                    characterLocation[0],
+                    characterLocation[1],
+                    characterLocation[2]),
                bytes(repr(characterLocationField).encode()))
     cursor.close()
     characterLocationField = getPlayerLocationField(clientHandler,
@@ -303,7 +307,9 @@ def getPlayerLocationArea(clientHandler,
             except error:
                 isValidField = False
             if isValidField:
-                fieldKey = repr(xCoord) + ' ' + repr(yCoord) + ' ' + repr(zCoord)
+                fieldKey = repr(xCoord) + ' ' + \
+                           repr(yCoord) + ' ' + \
+                           repr(zCoord)
 
                 if fieldIsThere:
                     field = literal_eval(cursor.value().decode())
@@ -344,7 +350,9 @@ def getPlayerArea(clientHandler, txn, staticWorldDB, characterDB):
             except error:
                 isValidField = False
             if isValidField:
-                fieldKey = repr(xCoord) + ' ' + repr(yCoord) + ' ' + repr(zCoord)
+                fieldKey = repr(xCoord) + ' ' + \
+                           repr(yCoord) + ' ' + \
+                           repr(zCoord)
 
                 if fieldIsThere:
                     field = literal_eval(cursor.value().decode())
@@ -403,7 +411,9 @@ def getPlayerItemArea(clientHandler,
             except error:
                 isValidField = False
             if isValidField:
-                fieldKey = repr(xCoord) + ' ' + repr(yCoord) + ' ' + repr(zCoord)
+                fieldKey = repr(xCoord) + ' ' + \
+                           repr(yCoord) + ' ' + \
+                           repr(zCoord)
 
                 if fieldIsThere:
                     field = literal_eval(cursor.value().decode())
@@ -464,9 +474,10 @@ def getCompleteUpdate(clientHandler,
     characterLocation = getPlayerLocation(clientHandler,
                                           txn,
                                           characterDB)
-    update['characterLocation'] = repr(characterLocation[0]) + ' ' + \
-                                  repr(characterLocation[1]) + ' ' + \
-                                  repr(characterLocation[2])
+    update['characterLocation'] = \
+        repr(characterLocation[0]) + ' ' + \
+        repr(characterLocation[1]) + ' ' + \
+        repr(characterLocation[2])
     characterLocationArea = getPlayerLocationArea(clientHandler,
                                                   txn,
                                                   characterDB,

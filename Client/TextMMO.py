@@ -36,13 +36,15 @@ version = '0.1.0'
 
 # This will be ran by the thread that handles the screen updates
 def doScreenUpdates():
-    sleep(0.5)
     while True:
-        if not GameState.screenUpdateQueue.empty():
-            screenUpdate = GameState.screenUpdateQueue.get()
-            MainGameScreen.updateQueue.put(screenUpdate)
-            GameState.updateState(screenUpdate, MainGameScreen.root)
         sleep(0.05)
+        try:
+            if not GameState.screenUpdateQueue.empty():
+                screenUpdate = GameState.screenUpdateQueue.get()
+                GameState.updateState(screenUpdate, MainGameScreen.root)
+                MainGameScreen.updateQueue.put(screenUpdate)
+        except AttributeError:
+            GameState.screenUpdateQueue.put(screenUpdate)
 
 
 # This starts up the threads and eventloop of the application
