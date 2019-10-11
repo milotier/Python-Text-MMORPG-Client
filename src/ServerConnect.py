@@ -1,4 +1,4 @@
-from socket import socket, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM, gethostbyname
 from ast import literal_eval
 from json import dumps
 from cryptography.fernet import Fernet
@@ -61,6 +61,7 @@ def recvall(sock):
 def connectToServer(host, port, version):
     global client
     global clientKey
+    host = gethostbyname(host)
     try:
         client.connect((host, port))
         key = recvall(client)

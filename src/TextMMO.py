@@ -11,7 +11,7 @@ import json
 # and the application's eventloop
 
 # Here the IP and port of the server will be read from the config file
-with open('config.json') as configData:
+with open('../config.json') as configData:
     config = json.load(configData)
 if 'IP' in config:
     host = config['IP']
