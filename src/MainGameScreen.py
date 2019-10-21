@@ -1,4 +1,4 @@
-from tkinter import Tk, Text
+from tkinter import Tk, Text, WORD
 from tkinter.font import Font
 from tkinter.font import families
 from queue import Queue
@@ -55,19 +55,44 @@ class ROText(Text):
         self.bindtags(bindTags)
 
 
+global commandHistory
+commandHistory = []
+global currentlySelectedCommand
+currentlySelectedCommand = 0
+
+
 def handleCommand(event):
+    global commandHistory
+    global currentlySelectedCommand
     if root.focus_get() != commandInputArea:
-        if event.keysym != 'BackSpace':
-            commandInputArea.focus()
+        commandInputArea.focus()
+        if event.keysym != 'BackSpace' and \
+           event.keysym != 'Up' and \
+           event.keysym != 'Down':
             commandInputArea.insert('end', event.keysym)
     if event.keysym == 'Return':
         inputCommand = commandInputArea.get('1.0', 'end')
-        inputCommand = inputCommand.strip('\n')
         if not inputCommand.isspace() and  \
            not inputCommand == '' and \
            not len(inputCommand) > 50:
+            commandHistory.append(inputCommand)
+            currentlySelectedCommand = len(commandHistory)
+            inputCommand = inputCommand.strip('\n')
             CommandController.checkGivenCommand(inputCommand)
         commandInputArea.delete('1.0', 'end')
+    elif event.keysym == 'Up':
+        value = commandInputArea.get('1.0', 'end')
+        commandInputArea.delete('1.0', 'end')
+        if currentlySelectedCommand > 0:
+            currentlySelectedCommand -= 1
+            commandInputArea.insert('end', commandHistory[currentlySelectedCommand])
+        else:
+            commandInputArea.insert('end', value)
+    elif event.keysym == 'Down':
+        commandInputArea.delete('1.0', 'end')
+        if currentlySelectedCommand + 1 < len(commandHistory):
+            currentlySelectedCommand += 1
+            commandInputArea.insert('end', commandHistory[currentlySelectedCommand])
 
 
 def quitGame(event):
@@ -157,7 +182,7 @@ def runMainloop():
     root.rowconfigure(3, weight=0)
 
     gameFont = Font(family='times new roman', size=12)
-    outputArea1 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
+    outputArea1 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white', wrap=WORD)
     outputArea1.see('end')
     outputArea1.tag_add('normal', "1.0", "end")
     outputArea1.tag_config('normal', foreground="black")
@@ -167,6 +192,8 @@ def runMainloop():
         outputArea1.bind_all(char, handleCommand)
     outputArea1.bind_all('<Key-BackSpace>', handleCommand)
     outputArea1.bind_all('<Key-Return>', handleCommand)
+    outputArea1.bind_all('<Up>', handleCommand)
+    outputArea1.bind_all('<Down>', handleCommand)
     outputArea1.bind_all('<Control-Key-q>', quitGame)
 
     topWindow1 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', height=1, font=gameFont, background='white')
@@ -181,19 +208,19 @@ def runMainloop():
     topWindow2.tag_add("normal", "0.0", "1000.1000")
     topWindow2.tag_config("normal", foreground="black")
 
-    outputArea2 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
+    outputArea2 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white', wrap=WORD)
     outputArea2.see('end')
     outputArea2.grid(row=1, column=1, sticky='nsew')
     outputArea2.tag_add("normal", "0.0", "1000.1000")
     outputArea2.tag_config("normal", foreground="black")
 
-    outputArea3 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
+    outputArea3 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white', wrap=WORD)
     outputArea3.see('end')
     outputArea3.grid(row=2, column=0, sticky='nsew')
     outputArea3.tag_add("normal", "0.0", "1000.1000")
     outputArea3.tag_config("normal", foreground="black")
 
-    outputArea4 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white')
+    outputArea4 = ROText(root, cursor='arrow', bd=5, highlightthickness=0, relief='raised', font=gameFont, background='white', wrap=WORD)
     outputArea4.see('end')
     outputArea4.grid(row=2, column=1, sticky='nsew')
     outputArea4.tag_add("normal", "0.0", "1.1000")

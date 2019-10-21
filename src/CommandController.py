@@ -136,6 +136,7 @@ def parseGivenCommand(tokenList):
                 token = tokenList[index]
                 if index == len(tokenList) - 1:
                     itemName += ' ' + token['input']
+                    itemName = itemName.strip()
                     command = TakeCommand(verb['input'],
                                           verb['commentFactor'],
                                           itemName)
@@ -153,6 +154,7 @@ def parseGivenCommand(tokenList):
                     token = tokenList[index]
                     if index == len(tokenList) - 1:
                         itemName += ' ' + token['input']
+                        itemName = itemName.strip()
                         command = TakeCommand(verb['input'],
                                               verb['commentFactor'],
                                               itemName)
@@ -169,6 +171,7 @@ def parseGivenCommand(tokenList):
                 token = tokenList[index]
                 if index == len(tokenList) - 1:
                     itemName += ' ' + token['input']
+                    itemName = itemName.strip()
                     command = DropCommand(verb['input'],
                                           verb['commentFactor'],
                                           itemName)
