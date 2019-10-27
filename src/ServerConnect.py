@@ -67,10 +67,10 @@ def connectToServer(host, port, version):
         key = recvall(client)
         if type(key) == bytes:
             clientKey = key
-            client.sendall(bytes(version.encode()))
+            f = Fernet(clientKey)
+            client.sendall(f.encrypt(bytes(version.encode())))
             connectionResult = recvall(client)
             if type(connectionResult) == bytes:
-                f = Fernet(clientKey)
                 connectionResult = f.decrypt(connectionResult)
                 connectionResult = literal_eval(connectionResult.decode())
                 if connectionResult == 'version correct':
