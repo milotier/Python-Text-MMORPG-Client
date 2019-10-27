@@ -59,9 +59,11 @@ def updateState(updates, app):
     global itemLocations
     global characterLocations
     global inventory
-    if updates == 'server went down':
-        print('\n\nThe server is down at the moment.', end=' ')
-        print('Please wait and come back later.\n\n')
+    if updates == 'disconnected':
+        print('\n\nYou have been disconnected from the server.', end=' ')
+        print('This can mean a few things:')
+        print('   -The server you were connected to went down')
+        print('   -Your don\'t or have a bad internet connection\n\n')
         app.destroy()
     elif updates['type'] == 'update':
         if 'itemLocations' in updates:

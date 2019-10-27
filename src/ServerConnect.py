@@ -99,7 +99,7 @@ def getUpdatesFromServer(updateQueue):
     while True:
         data = recvall(client)
         if not data:
-            updateQueue.put('server went down')
+            updateQueue.put('disconnected')
             break
         timestamp = time()
         lastReceivedUpdate = timestamp
@@ -109,6 +109,8 @@ def getUpdatesFromServer(updateQueue):
         if type(data) == list:
             for update in data:
                 updateQueue.put(update)
+        elif type(data) == str:
+            updateQueue.put(data)
 
 
 # This sends the commands inputted by the user to the server
