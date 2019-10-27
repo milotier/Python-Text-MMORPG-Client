@@ -133,7 +133,6 @@ def loginToAccount(accountDetails):
     f = Fernet(clientKey)
     accountDetails = f.encrypt(bytes(repr(accountDetails).encode()))
     client.sendall(accountDetails)
-    client.sendall(accountDetails)
     loginOutcome = recvall(client)
     if not loginOutcome:
         print('\n\nThe server is down at the moment.', end=' ')
